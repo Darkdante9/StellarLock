@@ -3,6 +3,8 @@ allowBuilds:
   better-sqlite3: true
   blake-hash: true
   bufferutil: true
+  core-js: true
+  esbuild: true
   protobufjs: true
   secp256k1: true
   tiny-secp256k1: true
