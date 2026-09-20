@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use soroban_sdk::{
     testutils::{Address as _, Events, Ledger},
     token, vec, Address, BytesN, Env, IntoVal, Symbol, TryFromVal,
@@ -923,10 +921,13 @@ fn create_split_lock_emits_a_lock_created_event_per_child() {
 
     let (_, lock1_topics, _) = child_created
         .iter()
-        .find(|(_, topics, _)| u64::try_from_val(&env, &topics.get(1).unwrap()).unwrap() == lock1_id)
+        .find(|(_, topics, _)| {
+            u64::try_from_val(&env, &topics.get(1).unwrap()).unwrap() == lock1_id
+        })
         .expect("lock_created event for the second child");
     let lock1_event_amount = i128::try_from_val(&env, &lock1_topics.get(4).unwrap()).unwrap();
-    let lock1_event_beneficiary = Address::try_from_val(&env, &lock1_topics.get(5).unwrap()).unwrap();
+    let lock1_event_beneficiary =
+        Address::try_from_val(&env, &lock1_topics.get(5).unwrap()).unwrap();
     assert_eq!(lock1_event_amount, 3_000_i128);
     assert_eq!(lock1_event_beneficiary, b2);
 }

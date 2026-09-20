@@ -1,5 +1,4 @@
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(not(test), no_std)]
 // Soroban contract entry points take a fixed set of ABI arguments plus the
 // `Env`, so `too_many_arguments` is not actionable here.
 #![allow(clippy::too_many_arguments)]
@@ -17,8 +16,7 @@ use soroban_sdk::{
 // ── Shared types, constants, and helpers from locker-common ──────────────────
 use locker_common::{
     calculate_vested, collect_paginated, enter_guard, exit_guard, get_index, next_id, push_index,
-    remove_from_index,
-    INSTANCE_BUMP, INSTANCE_THRESHOLD, PERSISTENT_BUMP, PERSISTENT_THRESHOLD,
+    remove_from_index, INSTANCE_BUMP, INSTANCE_THRESHOLD, PERSISTENT_BUMP, PERSISTENT_THRESHOLD,
     RATE_LIMIT_COOLDOWN, RATE_LIMIT_TTL_LEDGERS, UPGRADE_DELAY, WITHDRAWN_BUMP,
     WITHDRAWN_THRESHOLD,
 };
@@ -163,7 +161,11 @@ fn collect_locks_paginated(env: &Env, ids: Vec<u64>, offset: u32, limit: u32) ->
 }
 
 fn guard_enter(env: &Env) -> Result<(), ContractError> {
-    enter_guard(env, &DataKey::ReentrancyGuard, ContractError::ReentrancyDetected)
+    enter_guard(
+        env,
+        &DataKey::ReentrancyGuard,
+        ContractError::ReentrancyDetected,
+    )
 }
 
 fn guard_exit(env: &Env) {
@@ -476,13 +478,17 @@ impl TokenLocker {
         if env.storage().persistent().has(&key) {
             if let Ok(lock) = load_lock(&env, id) {
                 if lock.withdrawn {
-                    env.storage()
-                        .persistent()
-                        .extend_ttl(&key, WITHDRAWN_THRESHOLD, WITHDRAWN_BUMP);
+                    env.storage().persistent().extend_ttl(
+                        &key,
+                        WITHDRAWN_THRESHOLD,
+                        WITHDRAWN_BUMP,
+                    );
                 } else {
-                    env.storage()
-                        .persistent()
-                        .extend_ttl(&key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+                    env.storage().persistent().extend_ttl(
+                        &key,
+                        PERSISTENT_THRESHOLD,
+                        PERSISTENT_BUMP,
+                    );
                 }
             }
         }
@@ -830,13 +836,18 @@ impl TokenLocker {
             .ok_or(ContractError::NotAdmin)?;
         admin.require_auth();
         let execute_after = env.ledger().timestamp() + UPGRADE_DELAY;
-        let proposal = UpgradeProposal { new_wasm_hash, execute_after };
-        env.storage().instance().set(&DataKey::UpgradeProposal, &proposal);
-        env.storage().instance().extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
-        env.events().publish(
-            (Symbol::new(&env, "upgrade_proposed"), execute_after),
-            (),
-        );
+        let proposal = UpgradeProposal {
+            new_wasm_hash,
+            execute_after,
+        };
+        env.storage()
+            .instance()
+            .set(&DataKey::UpgradeProposal, &proposal);
+        env.storage()
+            .instance()
+            .extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
+        env.events()
+            .publish((Symbol::new(&env, "upgrade_proposed"), execute_after), ());
         Ok(())
     }
 
@@ -857,7 +868,8 @@ impl TokenLocker {
             return Err(ContractError::TimelockNotElapsed);
         }
         env.storage().instance().remove(&DataKey::UpgradeProposal);
-        env.deployer().update_current_contract_wasm(proposal.new_wasm_hash);
+        env.deployer()
+            .update_current_contract_wasm(proposal.new_wasm_hash);
         Ok(())
     }
 
@@ -874,7 +886,8 @@ impl TokenLocker {
             .get::<_, UpgradeProposal>(&DataKey::UpgradeProposal)
             .ok_or(ContractError::NoPendingUpgrade)?;
         env.storage().instance().remove(&DataKey::UpgradeProposal);
-        env.events().publish((Symbol::new(&env, "upgrade_cancelled"),), ());
+        env.events()
+            .publish((Symbol::new(&env, "upgrade_cancelled"),), ());
         Ok(())
     }
 
@@ -893,7 +906,8 @@ impl TokenLocker {
         env.storage()
             .instance()
             .extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
-        env.events().publish((Symbol::new(&env, "contract_paused"),), ());
+        env.events()
+            .publish((Symbol::new(&env, "contract_paused"),), ());
         Ok(())
     }
 
@@ -910,7 +924,8 @@ impl TokenLocker {
         env.storage()
             .instance()
             .extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
-        env.events().publish((Symbol::new(&env, "contract_unpaused"),), ());
+        env.events()
+            .publish((Symbol::new(&env, "contract_unpaused"),), ());
         Ok(())
     }
 }

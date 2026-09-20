@@ -45,7 +45,11 @@ pub struct Vesting {
 
 impl Vesting {
     pub fn none() -> Self {
-        Vesting { start: 0, end: 0, released: 0 }
+        Vesting {
+            start: 0,
+            end: 0,
+            released: 0,
+        }
     }
     pub fn is_none(&self) -> bool {
         self.start == 0 && self.end == 0
@@ -64,9 +68,7 @@ pub struct LockMetadata {
 
 impl LockMetadata {
     pub fn is_empty(&self) -> bool {
-        self.description.is_empty()
-            && self.project_url.is_empty()
-            && self.logo_url.is_empty()
+        self.description.is_empty() && self.project_url.is_empty() && self.logo_url.is_empty()
     }
 
     pub fn empty(env: &Env) -> Self {
@@ -86,10 +88,16 @@ pub fn next_id<K>(env: &Env, id_key: K, initial_value: u64) -> u64
 where
     K: IntoVal<Env, Val> + TryFromVal<Env, Val> + Clone,
 {
-    let id: u64 = env.storage().instance().get(&id_key).unwrap_or(initial_value);
+    let id: u64 = env
+        .storage()
+        .instance()
+        .get(&id_key)
+        .unwrap_or(initial_value);
     let next = id.saturating_add(1);
     env.storage().instance().set(&id_key, &next);
-    env.storage().instance().extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
+    env.storage()
+        .instance()
+        .extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
     id
 }
 
@@ -98,13 +106,21 @@ pub fn push_index<K>(env: &Env, index_key: K, lock_id: u64, withdrawn: bool)
 where
     K: IntoVal<Env, Val> + TryFromVal<Env, Val> + Clone,
 {
-    let mut ids: Vec<u64> = env.storage().persistent().get(&index_key).unwrap_or(vec![env]);
+    let mut ids: Vec<u64> = env
+        .storage()
+        .persistent()
+        .get(&index_key)
+        .unwrap_or(vec![env]);
     ids.push_back(lock_id);
     env.storage().persistent().set(&index_key, &ids);
     if withdrawn {
-        env.storage().persistent().extend_ttl(&index_key, WITHDRAWN_THRESHOLD, WITHDRAWN_BUMP);
+        env.storage()
+            .persistent()
+            .extend_ttl(&index_key, WITHDRAWN_THRESHOLD, WITHDRAWN_BUMP);
     } else {
-        env.storage().persistent().extend_ttl(&index_key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+        env.storage()
+            .persistent()
+            .extend_ttl(&index_key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
     }
 }
 
@@ -113,7 +129,11 @@ pub fn remove_from_index<K>(env: &Env, index_key: K, lock_id: u64)
 where
     K: IntoVal<Env, Val> + TryFromVal<Env, Val> + Clone,
 {
-    let ids: Vec<u64> = env.storage().persistent().get(&index_key).unwrap_or(vec![env]);
+    let ids: Vec<u64> = env
+        .storage()
+        .persistent()
+        .get(&index_key)
+        .unwrap_or(vec![env]);
     let mut filtered: Vec<u64> = vec![env];
     for existing in ids.iter() {
         if existing != lock_id {
@@ -121,7 +141,9 @@ where
         }
     }
     env.storage().persistent().set(&index_key, &filtered);
-    env.storage().persistent().extend_ttl(&index_key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+    env.storage()
+        .persistent()
+        .extend_ttl(&index_key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
 }
 
 /// Return the `Vec<u64>` stored under `index_key`, or an empty vec.
@@ -129,7 +151,10 @@ pub fn get_index<K>(env: &Env, index_key: K) -> Vec<u64>
 where
     K: IntoVal<Env, Val> + TryFromVal<Env, Val>,
 {
-    env.storage().persistent().get(&index_key).unwrap_or(vec![env])
+    env.storage()
+        .persistent()
+        .get(&index_key)
+        .unwrap_or(vec![env])
 }
 
 /// Paginate over `ids` and collect lock values via `lock_key_fn(id)`.
@@ -172,7 +197,9 @@ pub fn calculate_vested(amount: i128, start: u64, end: u64, now: u64) -> i128 {
     if duration <= 0 {
         return amount;
     }
-    (amount.saturating_mul(elapsed) / duration).min(amount).max(0)
+    (amount.saturating_mul(elapsed) / duration)
+        .min(amount)
+        .max(0)
 }
 
 // ── Re-entrancy guard ─────────────────────────────────────────────────────────
@@ -281,17 +308,16 @@ mod tests {
         let contract_id = env.register(DummyContract, ());
         env.as_contract(&contract_id, || {
             for i in 0u64..5 {
-                env.storage().persistent().set(&TestKey::Lock(i), &(i * 10u64));
+                env.storage()
+                    .persistent()
+                    .set(&TestKey::Lock(i), &(i * 10u64));
             }
             let ids = soroban_sdk::vec![&env, 0u64, 1u64, 2u64, 3u64, 4u64];
-            let page0: Vec<u64> =
-                collect_paginated(&env, ids.clone(), 0, 3, |id| TestKey::Lock(id));
+            let page0: Vec<u64> = collect_paginated(&env, ids.clone(), 0, 3, TestKey::Lock);
             assert_eq!(page0.len(), 3);
-            let page1: Vec<u64> =
-                collect_paginated(&env, ids.clone(), 3, 3, |id| TestKey::Lock(id));
+            let page1: Vec<u64> = collect_paginated(&env, ids.clone(), 3, 3, TestKey::Lock);
             assert_eq!(page1.len(), 2);
-            let empty: Vec<u64> =
-                collect_paginated(&env, ids, 10, 3, |id| TestKey::Lock(id));
+            let empty: Vec<u64> = collect_paginated(&env, ids, 10, 3, TestKey::Lock);
             assert_eq!(empty.len(), 0);
         });
     }
@@ -302,7 +328,10 @@ mod tests {
         let contract_id = env.register(DummyContract, ());
         env.as_contract(&contract_id, || {
             assert!(enter_guard(&env, &TestKey::Guard, 99u32).is_ok());
-            assert_eq!(enter_guard::<TestKey, u32>(&env, &TestKey::Guard, 99u32), Err(99u32));
+            assert_eq!(
+                enter_guard::<TestKey, u32>(&env, &TestKey::Guard, 99u32),
+                Err(99u32)
+            );
             exit_guard(&env, &TestKey::Guard);
             assert!(enter_guard(&env, &TestKey::Guard, 99u32).is_ok());
         });
@@ -312,7 +341,11 @@ mod tests {
     fn vesting_none_sentinel() {
         let v = Vesting::none();
         assert!(v.is_none());
-        let v2 = Vesting { start: 1, end: 100, released: 0 };
+        let v2 = Vesting {
+            start: 1,
+            end: 100,
+            released: 0,
+        };
         assert!(!v2.is_none());
     }
 

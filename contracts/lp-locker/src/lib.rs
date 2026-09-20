@@ -14,8 +14,7 @@ use soroban_sdk::{
 // ── Shared types, constants, and helpers from locker-common ──────────────────
 use locker_common::{
     calculate_vested, collect_paginated, enter_guard, exit_guard, get_index, next_id, push_index,
-    remove_from_index,
-    INSTANCE_BUMP, INSTANCE_THRESHOLD, PERSISTENT_BUMP, PERSISTENT_THRESHOLD,
+    remove_from_index, INSTANCE_BUMP, INSTANCE_THRESHOLD, PERSISTENT_BUMP, PERSISTENT_THRESHOLD,
     RATE_LIMIT_COOLDOWN, RATE_LIMIT_TTL_LEDGERS, UPGRADE_DELAY, WITHDRAWN_BUMP,
     WITHDRAWN_THRESHOLD,
 };
@@ -176,7 +175,11 @@ fn collect_locks_paginated(env: &Env, ids: Vec<u64>, offset: u32, limit: u32) ->
 }
 
 fn guard_enter(env: &Env) -> Result<(), ContractError> {
-    enter_guard(env, &DataKey::ReentrancyGuard, ContractError::ReentrancyDetected)
+    enter_guard(
+        env,
+        &DataKey::ReentrancyGuard,
+        ContractError::ReentrancyDetected,
+    )
 }
 
 fn guard_exit(env: &Env) {
@@ -402,7 +405,11 @@ impl LpLocker {
             save_lock(&env, &lock);
             env.events().publish(
                 (Symbol::new(&env, "lp_lock_withdrawn"), id),
-                (lock.beneficiary.clone(), lock.pool_share.clone(), releasable),
+                (
+                    lock.beneficiary.clone(),
+                    lock.pool_share.clone(),
+                    releasable,
+                ),
             );
             Ok(())
         })();
@@ -495,13 +502,17 @@ impl LpLocker {
         if env.storage().persistent().has(&key) {
             if let Ok(lock) = load_lock(&env, id) {
                 if lock.withdrawn {
-                    env.storage()
-                        .persistent()
-                        .extend_ttl(&key, WITHDRAWN_THRESHOLD, WITHDRAWN_BUMP);
+                    env.storage().persistent().extend_ttl(
+                        &key,
+                        WITHDRAWN_THRESHOLD,
+                        WITHDRAWN_BUMP,
+                    );
                 } else {
-                    env.storage()
-                        .persistent()
-                        .extend_ttl(&key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+                    env.storage().persistent().extend_ttl(
+                        &key,
+                        PERSISTENT_THRESHOLD,
+                        PERSISTENT_BUMP,
+                    );
                 }
             }
         }
@@ -953,7 +964,8 @@ impl LpLocker {
         env.storage()
             .instance()
             .extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
-        env.events().publish((Symbol::new(&env, "contract_paused"),), ());
+        env.events()
+            .publish((Symbol::new(&env, "contract_paused"),), ());
         Ok(())
     }
 
@@ -970,7 +982,8 @@ impl LpLocker {
         env.storage()
             .instance()
             .extend_ttl(INSTANCE_THRESHOLD, INSTANCE_BUMP);
-        env.events().publish((Symbol::new(&env, "contract_unpaused"),), ());
+        env.events()
+            .publish((Symbol::new(&env, "contract_unpaused"),), ());
         Ok(())
     }
 }

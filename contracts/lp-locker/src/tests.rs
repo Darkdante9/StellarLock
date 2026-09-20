@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
     token, Address, Env, IntoVal,
@@ -1466,7 +1464,9 @@ fn create_split_lock_two_beneficiaries_correct_amounts() {
     assert_eq!(lock_a.unlock_at, unlock_at);
     assert!(!lock_a.withdrawn);
 
-    let lock_b = client.get_lock(&group.lock_ids.get(1).unwrap()).expect("second sub-lock");
+    let lock_b = client
+        .get_lock(&group.lock_ids.get(1).unwrap())
+        .expect("second sub-lock");
     assert_eq!(lock_b.amount, 4_000_i128);
     assert_eq!(lock_b.beneficiary, b2);
 }
@@ -1638,7 +1638,11 @@ fn split_lock_sub_locks_appear_in_beneficiary_index() {
     assert_eq!(client.get_lock_count_by_beneficiary(&b1), 1);
     assert_eq!(client.get_lock_count_by_beneficiary(&b2), 1);
     assert_eq!(
-        client.get_locks_by_beneficiary(&b1, &0, &10).get(0).unwrap().amount,
+        client
+            .get_locks_by_beneficiary(&b1, &0, &10)
+            .get(0)
+            .unwrap()
+            .amount,
         700_i128
     );
 }
@@ -1723,9 +1727,18 @@ fn get_split_groups_by_creator_pagination_works() {
         advance_time(&env, 61);
     }
 
-    assert_eq!(client.get_split_groups_by_creator(&creator, &0, &10).len(), 3);
-    assert_eq!(client.get_split_groups_by_creator(&creator, &1, &1).len(), 1);
-    assert_eq!(client.get_split_groups_by_creator(&creator, &3, &10).len(), 0);
+    assert_eq!(
+        client.get_split_groups_by_creator(&creator, &0, &10).len(),
+        3
+    );
+    assert_eq!(
+        client.get_split_groups_by_creator(&creator, &1, &1).len(),
+        1
+    );
+    assert_eq!(
+        client.get_split_groups_by_creator(&creator, &3, &10).len(),
+        0
+    );
 }
 
 // ── create_split_lock: TVL and global stats ───────────────────────────────────
