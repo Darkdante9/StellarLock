@@ -123,8 +123,3 @@ export function createLogger(component: string): Logger {
     error: (message, data) => emit("error", component, message, data),
   }
 }
-
-/**
- * Module-level default logger — use createLogger() for component-specific context.
- */
-export const logger = createLogger("app")

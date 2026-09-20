@@ -88,11 +88,6 @@ export function fetchIndexerLocksForToken(
   return fetchJson<IndexerLocksPageDTO>(`/api/indexer-locks?${params}`)
 }
 
-/** Invalidate cached indexer responses (e.g. after a mutation that should be reflected immediately). */
-export function invalidateIndexerCache(): void {
-  statsCache.clear()
-}
-
 // ── DTO → frontend Lock mapping ────────────────────────────────────────────────
 
 /** Map indexer lock rows to the frontend Lock type, resolving token metadata on-chain. */

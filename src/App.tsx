@@ -7,7 +7,6 @@ import { trackPageView } from "@/lib/analytics"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal"
 import { PwaUpdatePrompt } from "@/components/ui/PwaUpdatePrompt"
-export { prefetch } from "@/lib/prefetch"
 
 const Landing = lazy(() => import("./pages/Landing").then((m) => ({ default: m.Landing })))
 const CreateLock = lazy(() => import("./pages/CreateLock").then((m) => ({ default: m.CreateLock })))

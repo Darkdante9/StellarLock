@@ -54,11 +54,6 @@ export function formatUsdValue(tokenAddress: string, value: number): string {
   return formatUsd(value)
 }
 
-/** Returns ms remaining until unlock (negative if unlockable). */
-export function msUntil(timestamp: number): number {
-  return timestamp - Date.now()
-}
-
 export function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString("en-US", {
     year: "numeric",
@@ -75,13 +70,6 @@ export function formatDateTime(timestamp: number): string {
     hour: "2-digit",
     minute: "2-digit",
   })
-}
-
-/** Extracts a readable message from any thrown value. */
-export function formatError(err: unknown): string {
-  if (err instanceof Error) return err.message
-  if (typeof err === "object" && err !== null) return JSON.stringify(err, null, 2)
-  return String(err)
 }
 
 export const notify = {

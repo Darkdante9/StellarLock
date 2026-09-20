@@ -137,8 +137,3 @@ export async function fetchPricesBatch(tokenAddresses: string[]): Promise<Map<st
 export function invalidatePriceCache(): void {
   priceCache.clear()
 }
-
-/** Check if a token address represents a Soroban contract (price unavailable via Horizon). */
-export function isContractToken(tokenAddress: string): boolean {
-  return tokenAddress.startsWith("C")
-}

@@ -40,34 +40,3 @@ export const mockLpLock = {
   dex: "aquarius" as const,
   poolPair: [VALID_CONTRACT_ADDRESS, "native"] as [string, string],
 }
-
-export function mockFetch(responses: Record<string, Response>) {
-  return vi.fn((url: string) => {
-    const key = Object.keys(responses).find((k) => url.includes(k))
-    if (key) {
-      return Promise.resolve(responses[key])
-    }
-    return Promise.reject(new Error(`No mock for ${url}`))
-  })
-}
-
-export function mockSuccessResponse(data: unknown) {
-  return new Response(JSON.stringify(data), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  })
-}
-
-export function mockErrorResponse(status = 500) {
-  return new Response(null, { status })
-}
-
-export const mockRpcResponse = {
-  getLedger: () => mockSuccessResponse({ ledger_sequence: 12345 }),
-  getBalance: () => mockSuccessResponse({ amount: "1000.0000000" }),
-  submitTransaction: () => mockSuccessResponse({ hash: "abc123" }),
-  getContractData: () =>
-    mockSuccessResponse({
-      xdr: "AAAAAgo=",
-    }),
-}
