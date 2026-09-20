@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { render } from "./utils"
 import { NotificationCenter } from "@/components/ui/NotificationCenter"
-import type { Notification } from "@/hooks/useNotifications"
+import type { Notification, useNotificationCenter as UseNotificationCenter } from "@/hooks/useNotifications"
 
 const mockNavigate = vi.fn()
 vi.mock("react-router-dom", async (importOriginal) => {
@@ -11,11 +11,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
+const addNotification = vi.fn()
 const markAsRead = vi.fn()
 const markAllAsRead = vi.fn()
 const clearHistory = vi.fn()
 
-const useNotificationCenter = vi.fn()
+const useNotificationCenter = vi.fn<typeof UseNotificationCenter>()
 
 vi.mock("@/hooks/useNotifications", () => ({
   useNotificationCenter: () => useNotificationCenter(),
@@ -38,6 +39,7 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
 function setNotifications(notifications: Notification[]) {
   useNotificationCenter.mockReturnValue({
     notifications,
+    addNotification,
     markAsRead,
     markAllAsRead,
     clearHistory,

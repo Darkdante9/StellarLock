@@ -7,7 +7,7 @@ import { LanguageSelector } from "./LanguageSelector"
 // Initialize a mock i18n instance for Storybook
 const createMockI18n = () => {
   const instance = i18n.createInstance()
-  instance.init({
+  void instance.init({
     lng: "en",
     fallbackLng: "en",
     resources: {
@@ -41,7 +41,6 @@ type Story = StoryObj<typeof meta>
 
 // Controlled component wrapper to show open/closed states
 function LanguageSelectorWrapper() {
-  const [isOpen, setIsOpen] = useState(false)
   return (
     <div className="relative inline-block">
       <LanguageSelector />
@@ -81,11 +80,11 @@ export const Open: Story = {
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-1 w-36 rounded-lg border border-border bg-card shadow-lg z-50" role="menu">
-            <button
-              className="block w-full px-4 py-2 text-sm text-start hover:bg-secondary rounded-lg"
-              role="menuitem"
-            >
+          <div
+            className="absolute right-0 mt-1 w-36 rounded-lg border border-border bg-card shadow-lg z-50"
+            role="menu"
+          >
+            <button className="block w-full px-4 py-2 text-sm text-start hover:bg-secondary rounded-lg" role="menuitem">
               English
             </button>
           </div>

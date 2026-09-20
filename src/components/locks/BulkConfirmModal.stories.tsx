@@ -18,6 +18,9 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+const CREATOR = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+const BENEFICIARY = "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
 const mockLocks: Lock[] = [
   {
     id: "1",
@@ -29,11 +32,13 @@ const mockLocks: Lock[] = [
       name: "USD Coin",
       decimals: 6,
     },
-    beneficiary: "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-    amount: "1000000000",
-    unlockDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    vesting: false,
+    creator: CREATOR,
+    beneficiary: BENEFICIARY,
+    amount: 1000,
+    usdValue: 1000,
+    createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+    unlockAt: Date.now() + 90 * 24 * 60 * 60 * 1000,
+    extendedCount: 0,
   },
   {
     id: "2",
@@ -45,11 +50,13 @@ const mockLocks: Lock[] = [
       name: "Soroswap Token",
       decimals: 7,
     },
-    beneficiary: "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-    amount: "5000000000",
-    unlockDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    vesting: false,
+    creator: CREATOR,
+    beneficiary: BENEFICIARY,
+    amount: 5000,
+    usdValue: 5000,
+    createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
+    unlockAt: Date.now() + 180 * 24 * 60 * 60 * 1000,
+    extendedCount: 0,
   },
   {
     id: "3",
@@ -61,11 +68,18 @@ const mockLocks: Lock[] = [
       name: "USDC-SOROSWAP LP",
       decimals: 8,
     },
-    beneficiary: "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-    amount: "2500000000",
-    unlockDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
-    vesting: true,
+    creator: CREATOR,
+    beneficiary: BENEFICIARY,
+    amount: 2500,
+    usdValue: 2500,
+    createdAt: Date.now() - 120 * 24 * 60 * 60 * 1000,
+    unlockAt: Date.now() + 365 * 24 * 60 * 60 * 1000,
+    extendedCount: 0,
+    vesting: {
+      start: Date.now() - 120 * 24 * 60 * 60 * 1000,
+      end: Date.now() + 365 * 24 * 60 * 60 * 1000,
+      released: 0,
+    },
     dex: "soroswap",
     poolPair: [
       "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -78,8 +92,9 @@ export const ExtendPending: Story = {
   args: {
     action: "extend",
     locks: mockLocks,
-    onConfirm: async () => {
+    onConfirm: () => {
       console.log("Confirm extend clicked")
+      return Promise.resolve()
     },
     onClose: () => console.log("Close clicked"),
   },
@@ -89,8 +104,9 @@ export const TransferPending: Story = {
   args: {
     action: "transfer",
     locks: mockLocks.slice(0, 2),
-    onConfirm: async () => {
+    onConfirm: () => {
       console.log("Confirm transfer clicked")
+      return Promise.resolve()
     },
     onClose: () => console.log("Close clicked"),
   },
@@ -100,8 +116,9 @@ export const ExtendSingleLock: Story = {
   args: {
     action: "extend",
     locks: mockLocks.slice(0, 1),
-    onConfirm: async () => {
+    onConfirm: () => {
       console.log("Confirm extend clicked")
+      return Promise.resolve()
     },
     onClose: () => console.log("Close clicked"),
   },

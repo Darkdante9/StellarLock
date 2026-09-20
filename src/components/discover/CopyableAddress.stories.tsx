@@ -19,7 +19,6 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const stellarAddress = "GBUQWP3BOUZX34ULNQG23RQ6F4V4UYXDEYK3Z77QIQC3FCJF234567"
-const shortAddress = "GBUU...4567"
 
 export const Default: Story = {
   args: {
@@ -51,6 +50,9 @@ export const InlineDisplay: Story = {
 }
 
 export const WithDifferentAddresses: Story = {
+  args: {
+    address: stellarAddress,
+  },
   render: () => (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-card p-4">
@@ -70,6 +72,9 @@ export const WithDifferentAddresses: Story = {
 }
 
 export const InDetailsList: Story = {
+  args: {
+    address: stellarAddress,
+  },
   render: () => (
     <div className="rounded-lg border border-border bg-card p-4 max-w-md">
       <h3 className="font-semibold mb-4">Lock Details</h3>
@@ -103,7 +108,9 @@ export const LongAddress: Story = {
   },
   render: (args) => (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Full address: <CopyableAddress {...args} /></p>
+      <p className="text-sm text-muted-foreground">
+        Full address: <CopyableAddress {...args} />
+      </p>
       <p className="text-sm text-muted-foreground">
         The address is truncated to show the start and end of the account identifier.
       </p>

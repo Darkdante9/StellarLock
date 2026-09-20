@@ -4,11 +4,14 @@ import userEvent from "@testing-library/user-event"
 import { CopyButton } from "@/components/ui/CopyButton"
 
 describe("CopyButton", () => {
+  const mockWriteText = vi.fn<(data: string) => Promise<void>>()
+
   beforeEach(() => {
+    mockWriteText.mockReset().mockResolvedValue(undefined)
     // Provide a functional clipboard mock
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: mockWriteText,
       },
     })
   })
@@ -26,7 +29,7 @@ describe("CopyButton", () => {
     const user = userEvent.setup()
     render(<CopyButton text="copy-me" />)
     await user.click(screen.getByRole("button", { name: "Copy to clipboard" }))
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("copy-me")
+    expect(mockWriteText).toHaveBeenCalledWith("copy-me")
   })
 
   it("switches to the 'Copied!' aria-label after a successful copy", async () => {
@@ -53,7 +56,7 @@ describe("CopyButton", () => {
   })
 
   it("stays in the default state when the clipboard API throws", async () => {
-    vi.mocked(navigator.clipboard.writeText).mockRejectedValueOnce(new Error("denied"))
+    mockWriteText.mockRejectedValueOnce(new Error("denied"))
     const user = userEvent.setup()
     render(<CopyButton text="copy-me" />)
     await user.click(screen.getByRole("button", { name: "Copy to clipboard" }))

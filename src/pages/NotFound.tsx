@@ -71,9 +71,7 @@ export function NotFound() {
                         <a href="https://github.com/StellarLock/StellarLock" className="text-primary hover:underline" />
                       ),
                     }}
-                  >
-                    Check our <explorer>explorer</explorer> to find locks or <github>visit our GitHub</github>.
-                  </Trans>
+                  />
                 </p>
               </div>
             </div>

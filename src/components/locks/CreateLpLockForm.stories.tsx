@@ -33,11 +33,11 @@ export const Empty: Story = {
 export const PartiallyFilled: Story = {
   name: "Partially Filled",
   args: {},
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     // Simulate user entering pool share address
     const inputs = canvasElement.querySelectorAll("input")
     if (inputs.length > 0) {
-      const poolShareAddressInput = inputs[0] as HTMLInputElement
+      const poolShareAddressInput = inputs[0]
       poolShareAddressInput.value = "CDPV3LFWAXFGXNNKMQTDPYQVTHXQZ7FONAAA"
       poolShareAddressInput.dispatchEvent(new Event("input", { bubbles: true }))
       poolShareAddressInput.dispatchEvent(new Event("change", { bubbles: true }))
@@ -45,7 +45,7 @@ export const PartiallyFilled: Story = {
 
     // Simulate user selecting an amount
     if (inputs.length > 1) {
-      const amountInput = inputs[1] as HTMLInputElement
+      const amountInput = inputs[1]
       amountInput.value = "100"
       amountInput.dispatchEvent(new Event("input", { bubbles: true }))
       amountInput.dispatchEvent(new Event("change", { bubbles: true }))
@@ -56,12 +56,14 @@ export const PartiallyFilled: Story = {
 export const WithValidationErrors: Story = {
   name: "With Validation Errors",
   args: {},
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     // Try to submit with invalid data
     const buttons = canvasElement.querySelectorAll("button")
-    const submitButton = Array.from(buttons).find((button) => button.textContent?.includes("Lock") || button.textContent?.includes("Create"))
+    const submitButton = Array.from(buttons).find(
+      (button) => button.textContent?.includes("Lock") || button.textContent?.includes("Create"),
+    )
     if (submitButton) {
-      ;(submitButton as HTMLButtonElement).click()
+      submitButton.click()
     }
   },
 }

@@ -12,26 +12,18 @@ describe("Breadcrumb", () => {
     const { container: container1 } = render(<Breadcrumb items={[]} />)
     expect(container1.firstChild).toBeNull()
 
-    const { container: container2 } = render(
-      <Breadcrumb items={[{ label: "Home" }]} />,
-    )
+    const { container: container2 } = render(<Breadcrumb items={[{ label: "Home" }]} />)
     expect(container2.firstChild).toBeNull()
   })
 
   it("renders a nav element with correct ARIA label", () => {
-    const items: BreadcrumbItem[] = [
-      { label: "Home", to: "/" },
-      { label: "Products" },
-    ]
+    const items: BreadcrumbItem[] = [{ label: "Home", to: "/" }, { label: "Products" }]
     render(<Breadcrumb items={items} />)
     expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeInTheDocument()
   })
 
   it("renders breadcrumb items in an ordered list", () => {
-    const items: BreadcrumbItem[] = [
-      { label: "Home", to: "/" },
-      { label: "Products" },
-    ]
+    const items: BreadcrumbItem[] = [{ label: "Home", to: "/" }, { label: "Products" }]
     render(<Breadcrumb items={items} />)
     expect(screen.getByRole("list")).toBeInTheDocument()
   })
@@ -58,10 +50,7 @@ describe("Breadcrumb", () => {
   })
 
   it("renders non-clickable text for the last item", () => {
-    const items: BreadcrumbItem[] = [
-      { label: "Home", to: "/" },
-      { label: "Current Page" },
-    ]
+    const items: BreadcrumbItem[] = [{ label: "Home", to: "/" }, { label: "Current Page" }]
     render(<Breadcrumb items={items} />)
 
     // Last item should not be a link
@@ -140,24 +129,16 @@ describe("Breadcrumb", () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   it("applies custom className to the nav wrapper", () => {
-    const items: BreadcrumbItem[] = [
-      { label: "Home", to: "/" },
-      { label: "Products" },
-    ]
-    const { container } = render(
-      <Breadcrumb items={items} className="custom-breadcrumb" />,
-    )
+    const items: BreadcrumbItem[] = [{ label: "Home", to: "/" }, { label: "Products" }]
+    render(<Breadcrumb items={items} className="custom-breadcrumb" />)
 
     const nav = screen.getByRole("navigation", { name: "Breadcrumb" })
     expect(nav).toHaveClass("custom-breadcrumb")
   })
 
   it("applies different text styling to current page vs navigation items", () => {
-    const items: BreadcrumbItem[] = [
-      { label: "Home", to: "/" },
-      { label: "Current" },
-    ]
-    const { container } = render(<Breadcrumb items={items} />)
+    const items: BreadcrumbItem[] = [{ label: "Home", to: "/" }, { label: "Current" }]
+    render(<Breadcrumb items={items} />)
 
     const homeLink = screen.getByRole("link", { name: "Home" })
     const currentSpan = screen.getByText("Current")
@@ -245,11 +226,8 @@ describe("Breadcrumb", () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   it("renders links with appropriate hover styling class", () => {
-    const items: BreadcrumbItem[] = [
-      { label: "Home", to: "/home" },
-      { label: "Current" },
-    ]
-    const { container } = render(<Breadcrumb items={items} />)
+    const items: BreadcrumbItem[] = [{ label: "Home", to: "/home" }, { label: "Current" }]
+    render(<Breadcrumb items={items} />)
 
     const link = screen.getByRole("link", { name: "Home" })
     expect(link.className).toContain("hover:text-foreground")
@@ -267,18 +245,9 @@ describe("Breadcrumb", () => {
     render(<Breadcrumb items={items} />)
 
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/")
-    expect(screen.getByRole("link", { name: "Absolute Path" })).toHaveAttribute(
-      "href",
-      "/absolute/path/to/page",
-    )
-    expect(screen.getByRole("link", { name: "Relative Path" })).toHaveAttribute(
-      "href",
-      "../relative",
-    )
-    expect(screen.getByRole("link", { name: "Query Params" })).toHaveAttribute(
-      "href",
-      "/search?q=test",
-    )
+    expect(screen.getByRole("link", { name: "Absolute Path" })).toHaveAttribute("href", "/absolute/path/to/page")
+    expect(screen.getByRole("link", { name: "Relative Path" })).toHaveAttribute("href", "../relative")
+    expect(screen.getByRole("link", { name: "Query Params" })).toHaveAttribute("href", "/search?q=test")
     expect(screen.getByRole("link", { name: "Hash" })).toHaveAttribute("href", "#section")
   })
 })

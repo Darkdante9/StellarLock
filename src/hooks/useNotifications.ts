@@ -38,7 +38,7 @@ export interface NotificationPrefs {
 // Subscription API helpers
 // ---------------------------------------------------------------------------
 
-const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? ""
+const API_BASE = import.meta.env.VITE_API_BASE ?? ""
 
 export interface SubscribeParams {
   lockId: string

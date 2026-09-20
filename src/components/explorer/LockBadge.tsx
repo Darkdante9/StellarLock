@@ -43,11 +43,11 @@ export function LockBadge({ summary }: { summary: TokenLockSummary }) {
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="outline" size="sm" onClick={() => copy("url", url)}>
+        <Button variant="outline" size="sm" onClick={() => void copy("url", url)}>
           {copied === "url" ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
           Copy share link
         </Button>
-        <Button variant="outline" size="sm" onClick={() => copy("md", markdown)}>
+        <Button variant="outline" size="sm" onClick={() => void copy("md", markdown)}>
           {copied === "md" ? <Check className="h-4 w-4 text-success" /> : <Code className="h-4 w-4" />}
           Copy README badge
         </Button>

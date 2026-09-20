@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react"
-import type { FieldValidationIssue } from "@/lib/validation/lockFormValidation"
 import { FormValidationErrors } from "./FormValidationErrors"
 
 const meta = {

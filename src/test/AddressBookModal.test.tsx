@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { screen, waitFor } from "@testing-library/react"
+import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { render } from "./utils"
 import { AddressBookModal } from "@/components/ui/AddressBookModal"
+import type { AddressBookEntry } from "@/hooks/useAddressBook"
 
 // Valid Stellar addresses for testing
 const VALID_ADDRESS_1 = "GBZQAFZFZVFSVZ4NHCGC6ZTLJWMJRGEGWHP2D3YYYKRQ7VQZUAEZURW"
@@ -10,7 +11,7 @@ const VALID_ADDRESS_2 = "GBJXWL2BQBNSWWJGZ4CIBKBFQCIDKN3Z3BVSKFUTASCTG3W7QSPDCVW
 
 describe("AddressBookModal", () => {
   const mockOnClose = vi.fn()
-  const mockOnSelect = vi.fn()
+  const mockOnSelect = vi.fn<(entry: AddressBookEntry) => void>()
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -228,14 +229,8 @@ describe("AddressBookModal", () => {
     // Add multiple addresses
     for (let i = 0; i < 2; i++) {
       await user.click(screen.getByTitle("Add address"))
-      await user.type(
-        screen.getByLabelText("Label"),
-        i === 0 ? "Alice Wallet" : "Bob Wallet",
-      )
-      await user.type(
-        screen.getByLabelText("Stellar Address"),
-        i === 0 ? VALID_ADDRESS_1 : VALID_ADDRESS_2,
-      )
+      await user.type(screen.getByLabelText("Label"), i === 0 ? "Alice Wallet" : "Bob Wallet")
+      await user.type(screen.getByLabelText("Stellar Address"), i === 0 ? VALID_ADDRESS_1 : VALID_ADDRESS_2)
       await user.click(screen.getByRole("button", { name: /Save/i }))
     }
 
@@ -338,14 +333,8 @@ describe("AddressBookModal", () => {
     // Add two addresses
     for (let i = 0; i < 2; i++) {
       await user.click(screen.getByTitle("Add address"))
-      await user.type(
-        screen.getByLabelText("Label"),
-        `Wallet ${i + 1}`,
-      )
-      await user.type(
-        screen.getByLabelText("Stellar Address"),
-        i === 0 ? VALID_ADDRESS_1 : VALID_ADDRESS_2,
-      )
+      await user.type(screen.getByLabelText("Label"), `Wallet ${i + 1}`)
+      await user.type(screen.getByLabelText("Stellar Address"), i === 0 ? VALID_ADDRESS_1 : VALID_ADDRESS_2)
       await user.click(screen.getByRole("button", { name: /Save/i }))
     }
 

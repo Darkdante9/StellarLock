@@ -20,7 +20,10 @@ const lockedSummary: TokenLockSummary = {
     logo: "https://example.com/usdc.png",
   },
   activeLocks: 1,
+  totalLocked: 10000,
   totalUsdValue: 10000,
+  nextUnlockAt: Date.now() + 1000 * 60 * 60 * 24 * 30,
+  locks: [],
 }
 
 const multiLockSummary: TokenLockSummary = {
@@ -32,7 +35,10 @@ const multiLockSummary: TokenLockSummary = {
     logo: "https://example.com/lp.png",
   },
   activeLocks: 5,
+  totalLocked: 50000,
   totalUsdValue: 50000,
+  nextUnlockAt: Date.now() + 1000 * 60 * 60 * 24 * 30,
+  locks: [],
 }
 
 const withdrawnSummary: TokenLockSummary = {
@@ -44,7 +50,10 @@ const withdrawnSummary: TokenLockSummary = {
     logo: "https://example.com/stellar.png",
   },
   activeLocks: 0,
+  totalLocked: 0,
   totalUsdValue: 0,
+  nextUnlockAt: null,
+  locks: [],
 }
 
 export const Locked: Story = {
