@@ -203,7 +203,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{contract, contractimpl, testutils::Ledger, Env};
+    use soroban_sdk::{contract, contractimpl, Env};
 
     // Minimal contract needed so env.as_contract() has a valid address.
     #[contract]

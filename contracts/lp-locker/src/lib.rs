@@ -76,12 +76,10 @@ pub enum ContractError {
     NoPendingUpgrade = 18,
     TimelockNotElapsed = 19,
     IdenticalTokens = 20,
-    LockDurationTooShort = 19,
-    LockDurationTooLong = 20,
+    LockDurationTooShort = 23,
+    LockDurationTooLong = 24,
     ContractPaused = 21,
     ExtensionLimitExceeded = 22,
-    IdenticalTokens = 23,
-    TimelockNotElapsed = 24,
 }
 
 // ── On-chain types ────────────────────────────────────────────────────────────
@@ -932,7 +930,7 @@ impl LpLocker {
         admin.require_auth();
         env.storage()
             .instance()
-            .get(&DataKey::UpgradeProposal)
+            .get::<_, UpgradeProposal>(&DataKey::UpgradeProposal)
             .ok_or(ContractError::NoPendingUpgrade)?;
         env.storage().instance().remove(&DataKey::UpgradeProposal);
         env.events()
