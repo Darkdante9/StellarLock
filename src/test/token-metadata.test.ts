@@ -47,9 +47,7 @@ describe("getTokenMetadata", () => {
     expect(calledUrls.length).toBeGreaterThan(0)
     for (const url of calledUrls) {
       expect(url).not.toContain("api.stellarexpert.com")
-      expect(url.startsWith("https://api.stellar.expert/") || url.startsWith("https://stellar.expert/")).toBe(
-        true,
-      )
+      expect(url.startsWith("https://api.stellar.expert/") || url.startsWith("https://stellar.expert/")).toBe(true)
     }
   })
 
@@ -126,14 +124,18 @@ describe("getOnChainTokenMeta", () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    // Every test here shares CONTRACT_ID — without clearing the in-memory
+    // cache, the first test's result leaks into every later one, which
+    // never even calls the mocked simulateCall.
+    clearTokenMetadataCache()
   })
 
   it("returns symbol, name, and decimals when all three RPC calls succeed", async () => {
     // simulateCall is called three times (symbol, name, decimals) via Promise.allSettled
     simulateCall
-      .mockResolvedValueOnce("USDC")      // symbol
-      .mockResolvedValueOnce("USD Coin")  // name
-      .mockResolvedValueOnce(6)           // decimals
+      .mockResolvedValueOnce("USDC") // symbol
+      .mockResolvedValueOnce("USD Coin") // name
+      .mockResolvedValueOnce(6) // decimals
 
     const meta = await getOnChainTokenMeta(CONTRACT_ID)
 
@@ -144,10 +146,7 @@ describe("getOnChainTokenMeta", () => {
   })
 
   it("returns results from the in-memory cache on the second call without hitting RPC again", async () => {
-    simulateCall
-      .mockResolvedValueOnce("XLM")
-      .mockResolvedValueOnce("Stellar Lumens")
-      .mockResolvedValueOnce(7)
+    simulateCall.mockResolvedValueOnce("XLM").mockResolvedValueOnce("Stellar Lumens").mockResolvedValueOnce(7)
 
     const first = await getOnChainTokenMeta(CONTRACT_ID)
     const second = await getOnChainTokenMeta(CONTRACT_ID)
@@ -184,7 +183,7 @@ describe("getOnChainTokenMeta", () => {
 
   it("falls back to truncated address for symbol when that specific call returns empty string", async () => {
     simulateCall
-      .mockResolvedValueOnce("")   // symbol is empty
+      .mockResolvedValueOnce("") // symbol is empty
       .mockResolvedValueOnce("My Token")
       .mockResolvedValueOnce(8)
 

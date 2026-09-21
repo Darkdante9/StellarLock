@@ -66,10 +66,9 @@ async function fetchFromStellarExpert(contractId: string): Promise<TokenMetadata
     // Soroban token contracts are looked up separately from the classic
     // asset (code-issuer) they wrap, so resolve the contract first to find
     // which classic asset (if any) backs it.
-    const contractRes = await fetch(
-      `https://api.stellar.expert/explorer/${network}/contract/${contractId}`,
-      { signal: AbortSignal.timeout(5000) },
-    )
+    const contractRes = await fetch(`https://api.stellar.expert/explorer/${network}/contract/${contractId}`, {
+      signal: AbortSignal.timeout(5000),
+    })
     if (!contractRes.ok) return null
     const contractData = (await contractRes.json()) as StellarExpertContractResponse
     const assetId = contractData.asset
@@ -171,18 +170,9 @@ export async function getOnChainTokenMeta(contractId: string): Promise<OnChainTo
   ])
 
   const meta: OnChainTokenMeta = {
-    symbol:
-      symbolResult.status === "fulfilled" && symbolResult.value
-        ? symbolResult.value
-        : contractId.slice(0, 6),
-    name:
-      nameResult.status === "fulfilled" && nameResult.value
-        ? nameResult.value
-        : contractId.slice(0, 6),
-    decimals:
-      decimalsResult.status === "fulfilled" && decimalsResult.value != null
-        ? Number(decimalsResult.value)
-        : 7,
+    symbol: symbolResult.status === "fulfilled" && symbolResult.value ? symbolResult.value : contractId.slice(0, 6),
+    name: nameResult.status === "fulfilled" && nameResult.value ? nameResult.value : contractId.slice(0, 6),
+    decimals: decimalsResult.status === "fulfilled" && decimalsResult.value != null ? Number(decimalsResult.value) : 7,
   }
 
   onChainCache.set(contractId, meta)
@@ -191,4 +181,5 @@ export async function getOnChainTokenMeta(contractId: string): Promise<OnChainTo
 
 export function clearTokenMetadataCache() {
   localStorage.removeItem(CACHE_KEY)
+  onChainCache.clear()
 }
