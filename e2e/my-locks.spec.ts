@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test"
 import { MyLocksPage } from "./pages/my-locks.page"
+import { mockConnectedWallet } from "./wallet-mock"
 
 test.describe("My Locks Page", () => {
   test("My locks page is protected (requires wallet connection)", async ({ page }) => {
@@ -19,8 +20,11 @@ test.describe("My Locks Page", () => {
     expect(hasContent).toBeTruthy()
   })
 
+  // The tabs, search box, and filter dropdowns all live behind <ConnectGate>
+  // — none of it renders without a connected wallet.
   test("Tab switching works", async ({ page }) => {
     const myLocks = new MyLocksPage(page)
+    await mockConnectedWallet(page)
     await myLocks.goto()
     await myLocks.clickTab("created")
     const url = page.url()
@@ -29,15 +33,18 @@ test.describe("My Locks Page", () => {
 
   test("Search field is functional", async ({ page }) => {
     const myLocks = new MyLocksPage(page)
+    await mockConnectedWallet(page)
     await myLocks.goto()
     const searchInput = page.locator('input[placeholder*="Search"]')
-    expect(await searchInput.isVisible()).toBeTruthy()
+    await expect(searchInput).toBeVisible()
   })
 
   test("Filter dropdowns are present", async ({ page }) => {
     const myLocks = new MyLocksPage(page)
+    await mockConnectedWallet(page)
     await myLocks.goto()
     const selects = page.locator("select")
+    await expect(selects.first()).toBeVisible()
     expect(await selects.count()).toBeGreaterThan(0)
   })
 

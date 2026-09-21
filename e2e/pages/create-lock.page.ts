@@ -20,18 +20,19 @@ export class CreateLockPage {
   }
 
   async switchToLpTab() {
-    await this.page.click("text=LP Lock")
+    await this.page.getByRole("tab", { name: "LP Lock" }).click()
   }
 
   async switchToTokenTab() {
-    await this.page.click("text=Token Lock")
+    await this.page.getByRole("tab", { name: "Token Lock" }).click()
   }
 
   async fillBeneficiary(address: string) {
-    const inputs = await this.page.locator('input[placeholder*="address"]').all()
-    if (inputs.length > 1) {
-      await inputs[1].fill(address)
-    }
+    await this.beneficiaryInput().fill(address)
+  }
+
+  beneficiaryInput() {
+    return this.page.locator("#beneficiary")
   }
 
   async submitForm() {
@@ -40,6 +41,10 @@ export class CreateLockPage {
 
   async getErrorMessage() {
     return await this.page.locator('[role="alert"]').textContent()
+  }
+
+  submitButton() {
+    return this.page.locator('button[type="submit"]')
   }
 
   heading() {
