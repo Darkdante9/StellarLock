@@ -9,7 +9,6 @@ import {
   useTokenAllowance,
   useDiscoverStats,
 } from "@/hooks/useLocks"
-import { MOCK_LOCKS } from "@/lib/mock-data"
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -468,16 +467,18 @@ describe("useDiscoverStats", () => {
     expect(result.current.data?.uniqueTokens).toBe(5)
   })
 
-  it("falls back to mock data when indexer returns null", async () => {
+  it("returns empty stats (not mock data) when indexer returns null", async () => {
+    // #211 intentionally removed the MOCK_LOCKS fallback so the Discover
+    // page is "a verifiable feed of real on-chain locks" — showing fake
+    // data when the indexer is down was considered misleading. Source
+    // stays "indexer" with zero/empty stats rather than falling back.
     vi.mocked(fetchIndexerStats).mockResolvedValue(null)
 
     const { result } = renderHook(() => useDiscoverStats())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(result.current.data?.source).toBe("mock")
-    // Derived from MOCK_LOCKS (non-withdrawn)
-    const activeMockCount = MOCK_LOCKS.filter((l) => l.status !== "withdrawn").length
-    expect(result.current.data?.totalLocks).toBe(activeMockCount)
+    expect(result.current.data?.source).toBe("indexer")
+    expect(result.current.data?.totalLocks).toBe(0)
   })
 
   it("sets error when indexer fetch throws", async () => {
