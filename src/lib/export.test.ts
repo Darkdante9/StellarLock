@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { exportToJSON, exportToCSV } from "@/lib/export"
 import type { Lock } from "@/types/lock"
 
@@ -36,19 +36,10 @@ describe("export utilities", () => {
   let createObjectURLMock: ReturnType<typeof vi.fn>
   let revokeObjectURLMock: ReturnType<typeof vi.fn>
 
-  // Held in locals rather than read back off `global.URL`, so assertions never
-  // reference an unbound method.
-  const createObjectURL = vi.fn(() => "blob:mock-url")
-  const revokeObjectURL = vi.fn()
-
   beforeEach(() => {
     downloadedFilename = null
 
     // Mock URL.createObjectURL and document functions
-    createObjectURL.mockClear()
-    revokeObjectURL.mockClear()
-    global.URL.createObjectURL = createObjectURL
-    global.URL.revokeObjectURL = revokeObjectURL
     createObjectURLMock = vi.fn(() => "blob:mock-url")
     revokeObjectURLMock = vi.fn()
     global.URL.createObjectURL = createObjectURLMock
@@ -77,6 +68,14 @@ describe("export utilities", () => {
 
     vi.spyOn(document.body, "appendChild").mockImplementation(() => mockLink)
     vi.spyOn(document.body, "removeChild").mockImplementation(() => mockLink)
+  })
+
+  afterEach(() => {
+    // Without this, document.createElement stays mocked into the next
+    // test's beforeEach, which calls it to build a "fresh" mockLink —
+    // except it's still the previous test's link, already carrying a
+    // non-configurable "download" property, so redefining it there throws.
+    vi.restoreAllMocks()
   })
 
   describe("exportToJSON", () => {
@@ -165,7 +164,6 @@ describe("export utilities", () => {
       const locks = [mockLock]
       exportToCSV(locks, "test.csv")
 
-      expect(createObjectURL).toHaveBeenCalled()
       expect(createObjectURLMock).toHaveBeenCalled()
     })
 
@@ -173,7 +171,6 @@ describe("export utilities", () => {
       const locks = [mockLock]
       exportToJSON(locks, "test.json")
 
-      expect(createObjectURL).toHaveBeenCalled()
       expect(createObjectURLMock).toHaveBeenCalled()
     })
 
@@ -181,7 +178,6 @@ describe("export utilities", () => {
       const locks = [mockLock]
       exportToCSV(locks, "test.csv")
 
-      expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock-url")
       expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url")
     })
   })
