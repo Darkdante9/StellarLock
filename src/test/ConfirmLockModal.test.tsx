@@ -95,7 +95,9 @@ describe("ConfirmLockModal", () => {
 
   it("shows the unlock date row", () => {
     render(<ConfirmLockModal data={baseData} onConfirm={onConfirm} onCancel={onCancel} />)
-    expect(screen.getByText(/unlock date/i)).toBeInTheDocument()
+    // Exact match — the immutability warning further down also contains the
+    // substring "unlock date" ("The unlock date can only be extended...").
+    expect(screen.getByText("Unlock date")).toBeInTheDocument()
   })
 
   it("shows 'Linear vesting enabled' when vesting is true", () => {
@@ -140,7 +142,9 @@ describe("ConfirmLockModal", () => {
 
   it("shows insufficient balance warning when balance < amount", () => {
     render(<ConfirmLockModal data={{ ...baseData, balance: 500 }} onConfirm={onConfirm} onCancel={onCancel} />)
-    expect(screen.getByText(/insufficient balance/i)).toBeInTheDocument()
+    // Exact match — the disabled "Insufficient Balance" button further down
+    // also matches the case-insensitive substring.
+    expect(screen.getByText("Insufficient balance.")).toBeInTheDocument()
   })
 
   it("renders a disabled 'Insufficient Balance' button when balance is too low", () => {
