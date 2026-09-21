@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { render } from "./utils"
+import { render, expectNoRenderedContent } from "./utils"
 import { Pagination } from "@/components/ui/Pagination"
 
 describe("Pagination", () => {
@@ -10,24 +10,18 @@ describe("Pagination", () => {
   // -------------------------------------------------------------------------
 
   it("renders nothing when totalPages <= 1 (exact 1 page)", () => {
-    const { container } = render(
-      <Pagination page={1} pageSize={10} total={10} onChange={vi.fn()} />,
-    )
-    expect(container.firstChild).toBeNull()
+    const { container } = render(<Pagination page={1} pageSize={10} total={10} onChange={vi.fn()} />)
+    expectNoRenderedContent(container)
   })
 
   it("renders nothing when total is 0", () => {
-    const { container } = render(
-      <Pagination page={1} pageSize={10} total={0} onChange={vi.fn()} />,
-    )
-    expect(container.firstChild).toBeNull()
+    const { container } = render(<Pagination page={1} pageSize={10} total={0} onChange={vi.fn()} />)
+    expectNoRenderedContent(container)
   })
 
   it("renders nothing when total fits exactly in one page", () => {
-    const { container } = render(
-      <Pagination page={1} pageSize={5} total={5} onChange={vi.fn()} />,
-    )
-    expect(container.firstChild).toBeNull()
+    const { container } = render(<Pagination page={1} pageSize={5} total={5} onChange={vi.fn()} />)
+    expectNoRenderedContent(container)
   })
 
   // -------------------------------------------------------------------------

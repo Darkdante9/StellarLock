@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { screen } from "@testing-library/react"
-import { render } from "./utils"
+import { render, expectNoRenderedContent } from "./utils"
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ui/Breadcrumb"
 
 describe("Breadcrumb", () => {
@@ -10,10 +10,10 @@ describe("Breadcrumb", () => {
 
   it("renders nothing when items array has 0 or 1 items", () => {
     const { container: container1 } = render(<Breadcrumb items={[]} />)
-    expect(container1.firstChild).toBeNull()
+    expectNoRenderedContent(container1)
 
     const { container: container2 } = render(<Breadcrumb items={[{ label: "Home" }]} />)
-    expect(container2.firstChild).toBeNull()
+    expectNoRenderedContent(container2)
   })
 
   it("renders a nav element with correct ARIA label", () => {
@@ -216,8 +216,9 @@ describe("Breadcrumb", () => {
     expect(ol).toBeInTheDocument()
     expect(ol?.getAttribute("role")).toBe("list")
 
-    // Check list items have proper structure
-    const listItems = container.querySelectorAll("li[role='list']")
+    // Check list items have proper structure (li elements get an implicit
+    // listitem role from being inside the role="list" <ol> above)
+    const listItems = container.querySelectorAll("li")
     expect(listItems.length).toBeGreaterThan(0)
   })
 
@@ -241,13 +242,21 @@ describe("Breadcrumb", () => {
       { label: "Relative Path", to: "../relative" },
       { label: "Query Params", to: "/search?q=test" },
       { label: "Hash", to: "#section" },
+      // Breadcrumb always renders the last item as non-clickable current-page
+      // text regardless of `to`, so a trailing item is needed here to verify
+      // "Hash" renders as an actual link.
+      { label: "Current" },
     ]
     render(<Breadcrumb items={items} />)
 
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/")
     expect(screen.getByRole("link", { name: "Absolute Path" })).toHaveAttribute("href", "/absolute/path/to/page")
-    expect(screen.getByRole("link", { name: "Relative Path" })).toHaveAttribute("href", "../relative")
+    // React Router resolves relative `to` values against the current route
+    // (rendered at "/" here) rather than passing them through verbatim like a
+    // plain <a href>, so "../relative" from root resolves to "/relative".
+    expect(screen.getByRole("link", { name: "Relative Path" })).toHaveAttribute("href", "/relative")
     expect(screen.getByRole("link", { name: "Query Params" })).toHaveAttribute("href", "/search?q=test")
-    expect(screen.getByRole("link", { name: "Hash" })).toHaveAttribute("href", "#section")
+    // Same resolution behavior — a hash-only `to` gets the current path prepended.
+    expect(screen.getByRole("link", { name: "Hash" })).toHaveAttribute("href", "/#section")
   })
 })
