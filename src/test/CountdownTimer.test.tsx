@@ -45,7 +45,9 @@ describe("CountdownTimer", () => {
   })
 
   it("renders a compact string instead of cells when compact=true", () => {
-    const future = Date.now() + 2 * 24 * 60 * 60 * 1000 // 2 days
+    // +5s buffer so real time elapsed between computing `future` and the
+    // component reading Date.now() can't tip this under the 2-day mark.
+    const future = Date.now() + 2 * 24 * 60 * 60 * 1000 + 5000
     renderTimer(future, true)
     // Should not render the full cell labels
     expect(screen.queryByText("Days")).not.toBeInTheDocument()
