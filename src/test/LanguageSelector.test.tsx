@@ -28,7 +28,7 @@ describe("LanguageSelector Component", () => {
     const toggle = screen.getByRole("button", { name: /select language/i })
     expect(toggle).toBeInTheDocument()
     expect(toggle).toHaveAttribute("aria-expanded", "false")
-    expect(screen.queryByRole("button", { name: "English" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "English" })).not.toBeInTheDocument()
   })
 
   it("opens the language menu when the toggle is clicked", async () => {
@@ -38,7 +38,7 @@ describe("LanguageSelector Component", () => {
     await user.click(screen.getByRole("button", { name: /select language/i }))
 
     expect(screen.getByRole("button", { name: /select language/i })).toHaveAttribute("aria-expanded", "true")
-    expect(screen.getByRole("button", { name: "English" })).toBeInTheDocument()
+    expect(screen.getByRole("menuitem", { name: "English" })).toBeInTheDocument()
   })
 
   it("closes the language menu when the toggle is clicked again", async () => {
@@ -47,10 +47,10 @@ describe("LanguageSelector Component", () => {
 
     const toggle = screen.getByRole("button", { name: /select language/i })
     await user.click(toggle)
-    expect(screen.getByRole("button", { name: "English" })).toBeInTheDocument()
+    expect(screen.getByRole("menuitem", { name: "English" })).toBeInTheDocument()
 
     await user.click(toggle)
-    expect(screen.queryByRole("button", { name: "English" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "English" })).not.toBeInTheDocument()
   })
 
   it("switches i18next's active language and closes the menu on selection", async () => {
@@ -63,11 +63,11 @@ describe("LanguageSelector Component", () => {
     render(<LanguageSelector />)
 
     await user.click(screen.getByRole("button", { name: /select language/i }))
-    await user.click(screen.getByRole("button", { name: "English" }))
+    await user.click(screen.getByRole("menuitem", { name: "English" }))
 
     await act(async () => {
       await waitFor(() => expect(i18n.language).toBe("en"))
     })
-    expect(screen.queryByRole("button", { name: "English" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "English" })).not.toBeInTheDocument()
   })
 })

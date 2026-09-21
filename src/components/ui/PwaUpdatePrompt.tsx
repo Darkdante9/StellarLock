@@ -49,7 +49,7 @@ export function PwaUpdatePrompt() {
 
     return () => {
       isMounted = false
-      navigator.serviceWorker.removeEventListener?.("controllerchange", handleControllerChange)
+      navigator.serviceWorker?.removeEventListener?.("controllerchange", handleControllerChange)
       if (currentRegistration) {
         currentRegistration.removeEventListener?.("updatefound", handleUpdateFound)
       }
