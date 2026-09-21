@@ -70,6 +70,22 @@ async function xlmPriceUsd(): Promise<number> {
   const cached = priceCache.get(NATIVE)
   if (cached && cached.expiry > Date.now()) return cached.price
 
+  const existing = inflight.get(NATIVE)
+  if (existing) return existing
+
+  // fetchXlmPrice already catches its own errors and resolves 0, so no
+  // .catch() is needed here to clear the in-flight entry on failure.
+  const promise = fetchXlmPrice().then((price) => {
+    priceCache.set(NATIVE, { price, expiry: Date.now() + CACHE_TTL_MS })
+    inflight.delete(NATIVE)
+    return price
+  })
+
+  inflight.set(NATIVE, promise)
+  return promise
+}
+
+async function fetchXlmPrice(): Promise<number> {
   try {
     const issuer = usdcIssuer()
     const url =
@@ -90,10 +106,7 @@ async function xlmPriceUsd(): Promise<number> {
 
     const bid = Number(data.bids?.[0]?.price ?? 0)
     const ask = Number(data.asks?.[0]?.price ?? 0)
-    const mid = bid > 0 && ask > 0 ? (bid + ask) / 2 : bid || ask
-
-    priceCache.set(NATIVE, { price: mid, expiry: Date.now() + CACHE_TTL_MS })
-    return mid
+    return bid > 0 && ask > 0 ? (bid + ask) / 2 : bid || ask
   } catch {
     return 0
   }
