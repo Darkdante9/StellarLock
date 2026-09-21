@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { renderHook, waitFor, act } from "@testing-library/react"
+import { renderHook, act } from "@testing-library/react"
 import { useRpcHealth, type RpcStatus } from "@/hooks/useRpcHealth"
 
 // ---------------------------------------------------------------------------
@@ -7,13 +7,8 @@ import { useRpcHealth, type RpcStatus } from "@/hooks/useRpcHealth"
 // ---------------------------------------------------------------------------
 
 function mockFetchWith(status: number, elapsedMs = 0): ReturnType<typeof vi.fn> {
-  return vi.fn(() =>
-    new Promise<Response>((resolve) =>
-      setTimeout(
-        () => resolve(new Response(null, { status })),
-        elapsedMs,
-      ),
-    ),
+  return vi.fn(
+    () => new Promise<Response>((resolve) => setTimeout(() => resolve(new Response(null, { status })), elapsedMs)),
   )
 }
 
@@ -38,7 +33,10 @@ describe("useRpcHealth", () => {
   describe("initial state", () => {
     it("starts with status 'connected' and lastChecked null before the first check resolves", () => {
       // Never-resolving fetch so we can inspect pre-check state
-      vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})))
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() => new Promise(() => {})),
+      )
 
       const { result } = renderHook(() => useRpcHealth())
 
@@ -54,12 +52,10 @@ describe("useRpcHealth", () => {
       const { result } = renderHook(() => useRpcHealth())
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
 
-      await waitFor(() => {
-        expect(result.current.lastChecked).not.toBeNull()
-      })
+      expect(result.current.lastChecked).not.toBeNull()
 
       expect(result.current.status).toBe("connected")
       expect(result.current.lastChecked).toBeInstanceOf(Date)
@@ -83,12 +79,10 @@ describe("useRpcHealth", () => {
       const { result } = renderHook(() => useRpcHealth())
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
 
-      await waitFor(() => {
-        expect(result.current.lastChecked).not.toBeNull()
-      })
+      expect(result.current.lastChecked).not.toBeNull()
 
       // The Promise.race rejects with "timeout" before the response arrives
       expect(result.current.status).toBe("disconnected")
@@ -102,12 +96,10 @@ describe("useRpcHealth", () => {
       const { result } = renderHook(() => useRpcHealth())
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
 
-      await waitFor(() => {
-        expect(result.current.lastChecked).not.toBeNull()
-      })
+      expect(result.current.lastChecked).not.toBeNull()
 
       expect(result.current.status).toBe("disconnected")
     })
@@ -118,12 +110,10 @@ describe("useRpcHealth", () => {
       const { result } = renderHook(() => useRpcHealth())
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
 
-      await waitFor(() => {
-        expect(result.current.lastChecked).not.toBeNull()
-      })
+      expect(result.current.lastChecked).not.toBeNull()
 
       expect(result.current.status).toBe("disconnected")
     })
@@ -144,18 +134,20 @@ describe("useRpcHealth", () => {
 
       // First immediate check
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
-      await waitFor(() => expect(result.current.lastChecked).not.toBeNull())
+      expect(result.current.lastChecked).not.toBeNull()
 
       const firstChecked = result.current.lastChecked
 
-      // Advance past first polling interval (30 s)
+      // Advance past first polling interval (30 s) plus enough for the
+      // second check to complete, without using runAllTimersAsync — the
+      // hook's setInterval reschedules forever, so "run everything until
+      // nothing's left" never terminates.
       await act(async () => {
-        vi.advanceTimersByTime(30_001)
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(30_001 + 6500)
       })
-      await waitFor(() => expect(result.current.lastChecked).not.toEqual(firstChecked))
+      expect(result.current.lastChecked).not.toEqual(firstChecked)
 
       // fetch should have been called at least twice (initial + one interval)
       // Each call checks two endpoints, so callCount >= 2
@@ -169,10 +161,7 @@ describe("useRpcHealth", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn(
-          () =>
-            new Promise<Response>((resolve) =>
-              setTimeout(() => resolve(new Response(null, { status: 200 })), 100),
-            ),
+          () => new Promise<Response>((resolve) => setTimeout(() => resolve(new Response(null, { status: 200 })), 100)),
         ),
       )
 
@@ -183,7 +172,7 @@ describe("useRpcHealth", () => {
 
       // Advance timers — should not throw or update state
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
 
       // State should remain at the initial values since unmount happened first
@@ -198,10 +187,10 @@ describe("useRpcHealth", () => {
       const { result } = renderHook(() => useRpcHealth())
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(6500)
       })
 
-      await waitFor(() => expect(result.current.lastChecked).not.toBeNull())
+      expect(result.current.lastChecked).not.toBeNull()
 
       const validStatuses: RpcStatus[] = ["connected", "slow", "disconnected"]
       expect(validStatuses).toContain(result.current.status)
