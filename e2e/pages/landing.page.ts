@@ -1,21 +1,21 @@
-import { Page } from '@playwright/test'
+import { Page } from "@playwright/test"
 
 export class LandingPage {
   constructor(public page: Page) {}
 
   async goto() {
-    await this.page.goto('/')
+    await this.page.goto("/")
   }
 
   async clickCreateLock() {
-    await this.page.click('text=Create Lock')
+    await this.page.click("text=Create Lock")
   }
 
   async clickExplorer() {
-    await this.page.getByRole('link', { name: 'Explore' }).click()
+    await this.page.getByRole("link", { name: "Explore" }).click()
   }
 
-  async isVisible() {
-    return await this.page.locator('h1:has-text("Lock your tokens")').isVisible()
+  heading() {
+    return this.page.locator('h1:has-text("locked")')
   }
 }

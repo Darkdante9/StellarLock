@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test'
+import { Page } from "@playwright/test"
 
 export class ExplorerPage {
   constructor(public page: Page) {}
@@ -7,21 +7,21 @@ export class ExplorerPage {
     if (tokenAddress) {
       await this.page.goto(`/explore/${tokenAddress}`)
     } else {
-      await this.page.goto('/explore')
+      await this.page.goto("/explore")
     }
   }
 
   async searchToken(address: string) {
     await this.page.fill('input[placeholder*="token"]', address)
-    await this.page.keyboard.press('Enter')
+    await this.page.keyboard.press("Enter")
   }
 
   async waitForTokenHeader() {
-    await this.page.locator('h1').first().waitFor()
+    await this.page.locator("h1").first().waitFor()
   }
 
   async getTokenName() {
-    return await this.page.locator('h1').first().textContent()
+    return await this.page.locator("h1").first().textContent()
   }
 
   async getLockCount() {
@@ -29,7 +29,7 @@ export class ExplorerPage {
     return cards
   }
 
-  async isLoading() {
-    return await this.page.locator('[class*="animate-pulse"]').isVisible()
+  loadingSkeleton() {
+    return this.page.locator('[class*="animate-pulse"]').first()
   }
 }

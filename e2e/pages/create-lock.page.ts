@@ -1,10 +1,10 @@
-import { Page } from '@playwright/test'
+import { Page } from "@playwright/test"
 
 export class CreateLockPage {
   constructor(public page: Page) {}
 
   async goto() {
-    await this.page.goto('/app/create')
+    await this.page.goto("/app/create")
   }
 
   async fillTokenAddress(address: string) {
@@ -20,11 +20,11 @@ export class CreateLockPage {
   }
 
   async switchToLpTab() {
-    await this.page.click('text=LP Lock')
+    await this.page.click("text=LP Lock")
   }
 
   async switchToTokenTab() {
-    await this.page.click('text=Token Lock')
+    await this.page.click("text=Token Lock")
   }
 
   async fillBeneficiary(address: string) {
@@ -42,7 +42,7 @@ export class CreateLockPage {
     return await this.page.locator('[role="alert"]').textContent()
   }
 
-  async isVisible() {
-    return await this.page.locator('h1:has-text("Create")').isVisible()
+  heading() {
+    return this.page.locator('h1:has-text("Create")')
   }
 }

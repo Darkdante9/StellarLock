@@ -1,21 +1,21 @@
-import { test, expect } from '@playwright/test'
-import { LandingPage } from './pages/landing.page'
+import { test, expect } from "@playwright/test"
+import { LandingPage } from "./pages/landing.page"
 
-test.describe('Navigation Flows', () => {
-  test('Landing page loads successfully', async ({ page }) => {
+test.describe("Navigation Flows", () => {
+  test("Landing page loads successfully", async ({ page }) => {
     const landing = new LandingPage(page)
     await landing.goto()
-    expect(await landing.isVisible()).toBeTruthy()
+    await expect(landing.heading()).toBeVisible()
   })
 
-  test('Landing → Create Lock navigation', async ({ page }) => {
+  test("Landing → Create Lock navigation", async ({ page }) => {
     const landing = new LandingPage(page)
     await landing.goto()
     await landing.clickCreateLock()
     await expect(page).toHaveURL(/\/app\/create/)
   })
 
-  test('Landing → Explorer navigation', async ({ page }) => {
+  test("Landing → Explorer navigation", async ({ page }) => {
     const landing = new LandingPage(page)
     await landing.goto()
     await landing.clickExplorer()
