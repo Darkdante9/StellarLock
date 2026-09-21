@@ -9,7 +9,10 @@ const mockSignTransaction = vi.fn()
 
 vi.mock("@/hooks/useWallet", () => ({
   useWallet: () => ({
-    address: "GALICE00000000000000000000000000000000000000000000000000",
+    // Must be a checksum-valid Stellar address — it's used as the fallback
+    // beneficiary when the form's beneficiary field is left blank, and form
+    // validation rejects an invalid one, which silently keeps submit disabled.
+    address: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
     signTransaction: mockSignTransaction,
   }),
 }))
@@ -18,10 +21,21 @@ vi.mock("@/hooks/useLocks", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/useLocks")>("@/hooks/useLocks")
   return {
     ...actual,
-    useTokenBalance: () => ({ data: null, loading: false }),
     useTokenAllowance: () => ({ data: null, loading: false }),
   }
 })
+
+// CreateTokenLockForm sources its balance from useTokenBalanceSWR, not
+// useTokenBalance from @/hooks/useLocks.
+vi.mock("@/hooks/useTokenBalanceSWR", () => ({
+  useTokenBalanceSWR: () => ({
+    balance: null,
+    isLoading: false,
+    isRevalidating: false,
+    refetch: vi.fn(),
+    clear: vi.fn(),
+  }),
+}))
 
 vi.mock("@/lib/token-locker", () => ({
   createTokenLock: vi.fn().mockResolvedValue({ id: "42", txHash: "deadbeef" }),

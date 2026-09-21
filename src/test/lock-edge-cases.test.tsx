@@ -27,13 +27,20 @@ vi.mock("@/lib/stellar", async (importOriginal) => {
   }
 })
 
-vi.mock("@/hooks/useLocks", () => ({
-  useTokenBalance: vi.fn(() => ({
-    data: 100,
-    loading: false,
-    error: null,
-    reload: vi.fn(),
+// CreateTokenLockForm sources its balance from useTokenBalanceSWR, not
+// useTokenBalance from @/hooks/useLocks — mocked separately below with the
+// shape the hook actually returns (stroops bigint, isLoading/isRevalidating).
+vi.mock("@/hooks/useTokenBalanceSWR", () => ({
+  useTokenBalanceSWR: vi.fn(() => ({
+    balance: BigInt(100 * 1e7),
+    isLoading: false,
+    isRevalidating: false,
+    refetch: vi.fn(),
+    clear: vi.fn(),
   })),
+}))
+
+vi.mock("@/hooks/useLocks", () => ({
   useTokenAllowance: vi.fn(() => ({
     data: 10000,
     loading: false,
