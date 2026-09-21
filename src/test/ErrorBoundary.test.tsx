@@ -68,10 +68,10 @@ describe("ErrorBoundary component", () => {
     // Fallback is visible
     expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument()
 
-    // Click "Try again" — this calls setState({ error: null })
-    await user.click(screen.getByRole("button", { name: /try again/i }))
-
-    // Re-render the boundary with a healthy child so we can confirm recovery
+    // ErrorBoundary.render() only checks this.state.error — it doesn't reset
+    // on new props — so the healthy child must be swapped in *before*
+    // clicking reset, or resetting while the still-throwing child is mounted
+    // just re-throws immediately and bounces right back to the fallback.
     rerender(
       <I18nextProvider i18n={i18n}>
         <ErrorBoundary>
@@ -79,6 +79,10 @@ describe("ErrorBoundary component", () => {
         </ErrorBoundary>
       </I18nextProvider>,
     )
+
+    // Click "Try again" — this calls setState({ error: null }), and since
+    // children are now the healthy one, rendering succeeds this time
+    await user.click(screen.getByRole("button", { name: /try again/i }))
 
     expect(screen.getByText("Child content")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /try again/i })).not.toBeInTheDocument()

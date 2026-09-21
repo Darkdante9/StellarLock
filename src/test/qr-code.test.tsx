@@ -4,9 +4,7 @@ import { QrCodeModal } from "@/components/ui/QrCodeModal"
 
 // Mock qrcode.react since canvas rendering doesn't work in jsdom
 vi.mock("qrcode.react", () => ({
-  QRCodeCanvas: ({ value }: { value: string }) => (
-    <canvas data-testid="qr-canvas" data-value={value} />
-  ),
+  QRCodeCanvas: ({ value }: { value: string }) => <canvas data-testid="qr-canvas" data-value={value} />,
 }))
 
 describe("QrCodeModal", () => {
@@ -55,7 +53,9 @@ describe("QrCodeModal", () => {
 
   it("calls onClose when Escape is pressed", () => {
     render(<QrCodeModal url={TEST_URL} onClose={mockClose} />)
-    fireEvent.keyDown(window, { key: "Escape" })
+    // useModalFocusTrap attaches its keydown listener on document, not
+    // window — dispatching on window doesn't reach it.
+    fireEvent.keyDown(document, { key: "Escape" })
     expect(mockClose).toHaveBeenCalled()
   })
 
