@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest"
 import { validateTokenLockForm, validateLpLockForm } from "@/lib/validation/lockFormValidation"
 import { VALID_PUBLIC_KEY, VALID_CONTRACT_ADDRESS } from "./mocks"
 
-const futureDate = () => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+// +5s buffer past the 24h minimum lock duration so real time elapsed between
+// computing this and validateLockDuration's own Date.now() read can't tip it
+// under the threshold.
+const futureDate = () => new Date(Date.now() + 24 * 60 * 60 * 1000 + 5000).toISOString()
 const pastDate = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
 function validTokenParams(overrides: Partial<Parameters<typeof validateTokenLockForm>[0]> = {}) {

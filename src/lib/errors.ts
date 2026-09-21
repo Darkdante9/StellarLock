@@ -53,8 +53,13 @@ const CONTRACT_ERRORS: Record<string, Omit<StructuredError, "code">> = {
     link: null,
     i18nKey: "errors.canOnlyExtend",
   },
-  // LockDurationTooLong has been removed: it has no corresponding variant in
-  // the deployed Rust ContractError enum and can never be triggered on-chain.
+  LockDurationTooLong: {
+    title: "errors.lockDurationTooLong.title",
+    message: "errors.lockDurationTooLong.message",
+    recovery: "errors.lockDurationTooLong.recovery",
+    link: null,
+    i18nKey: "errors.lockDurationTooLong",
+  },
   VestingEndBeforeStart: {
     title: "errors.vestingEndBeforeStart.title",
     message: "errors.vestingEndBeforeStart.message",
