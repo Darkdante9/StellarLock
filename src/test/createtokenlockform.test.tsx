@@ -33,6 +33,7 @@ vi.mock("@/lib/stellar", () => ({
   CONTRACTS: { tokenLocker: "CONTRACT_LOCKER" },
   isValidStellarAddress: (addr: string) => addr.startsWith("G") && addr.length === 56,
   isValidStellarContractAddress: (addr: string) => addr.startsWith("C") && addr.length === 56,
+  getTokenBalance: vi.fn().mockResolvedValue(0),
 }))
 
 describe("CreateTokenLockForm Validation Rules", () => {

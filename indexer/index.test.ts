@@ -217,8 +217,10 @@ describe("lock indexer", () => {
 
     const stats = indexer.getStats()
     expect(stats.totalLocks).toBe(2)
-    expect(stats.totalValue).toBe(750n)
-    // The replayed lock_created did not resurrect the withdrawn lock.
+    // Only the still-locked LP lock (250) counts toward totalValue — the
+    // token lock (500) was withdrawn in the previous test and the replay
+    // above must not resurrect it.
+    expect(stats.totalValue).toBe(250n)
     expect(indexer.getLocksForToken(tokenAddr)[0].status).toBe("withdrawn")
   })
 
