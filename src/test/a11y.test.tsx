@@ -55,8 +55,7 @@ vi.mock("@/lib/stellar", async (importOriginal) => {
     getRpc: vi.fn(),
     invalidateRpcCache: vi.fn(),
     simulateCall: vi.fn().mockResolvedValue(null),
-    explorerLink: (addr: string) =>
-      `https://stellar.expert/explorer/testnet/contract/${addr}`,
+    explorerLink: (addr: string) => `https://stellar.expert/explorer/testnet/contract/${addr}`,
   }
 })
 
@@ -66,15 +65,18 @@ vi.mock("@/lib/analytics", () => ({
 }))
 
 vi.mock("@/lib/env", () => ({
-  getEnv: () => ({
-    VITE_NETWORK: "testnet",
-    VITE_RPC_URL: "https://soroban-testnet.stellar.org",
-    VITE_HORIZON_URL: "https://horizon-testnet.stellar.org",
-    VITE_TOKEN_LOCKER_CONTRACT: "CBFCKEOQRQIXKLGU4QBUQVOINOKFBOXJ37LXEKLKNUO6TW4FNGDU26AW",
-    VITE_LP_LOCKER_CONTRACT: "CA3WYETNIF5IAF3VUNQ3SYKZFV45TOFBF7CEZ46I7QEBPWTRM73WLEI4",
-    VITE_CONTRACT_ENV: "testnet",
-    VITE_CONTRACT_VERSION: "v1",
-  }),
+  ENV: {
+    network: "testnet",
+    rpcUrl: "https://soroban-testnet.stellar.org",
+    horizonUrl: "https://horizon-testnet.stellar.org",
+    contractEnv: "testnet",
+    contractVersion: "v1",
+    tokenLockerContract: "CBFCKEOQRQIXKLGU4QBUQVOINOKFBOXJ37LXEKLKNUO6TW4FNGDU26AW",
+    lpLockerContract: "CA3WYETNIF5IAF3VUNQ3SYKZFV45TOFBF7CEZ46I7QEBPWTRM73WLEI4",
+    appUrl: "",
+    isDev: false,
+    showEnvBadge: false,
+  },
 }))
 
 vi.mock("@/lib/sentry", () => ({
@@ -88,6 +90,7 @@ vi.mock("@/lib/web-vitals", () => ({
 
 vi.mock("@/hooks/useLocks", () => ({
   useMyLocks: () => ({ data: { created: [], received: [] }, loading: false, error: null }),
+  useMyLocksStats: () => ({ data: { totalValue: 0, unlockable: 0 }, loading: false, error: null }),
   useLocksByToken: () => ({ data: null, loading: false, error: null }),
   useLockCountByToken: () => ({ data: 0, loading: false }),
   useTokenBalance: () => ({ data: null, loading: false }),

@@ -162,6 +162,7 @@ export function TokenSearchBar({ className, autoFocus }: { className?: string; a
           autoFocus={autoFocus}
           placeholder={t("search.placeholder")}
           aria-label={t("search.ariaLabel")}
+          role="combobox"
           aria-autocomplete="list"
           aria-controls="search-suggestions"
           aria-expanded={showSuggestions && suggestions.length > 0}

@@ -25,14 +25,14 @@ describe("TokenSearchBar", () => {
 
   it("renders the search input and submit button", () => {
     render(<TokenSearchBar />)
-    expect(screen.getByRole("textbox")).toBeInTheDocument()
+    expect(screen.getByRole("combobox")).toBeInTheDocument()
     expect(screen.getByRole("button")).toBeInTheDocument()
   })
 
   it("renders the search icon", () => {
     render(<TokenSearchBar />)
     // Lucide Search icon renders as an SVG with aria-hidden; the form itself is present
-    const form = screen.getByRole("textbox").closest("form")
+    const form = screen.getByRole("combobox").closest("form")
     expect(form).toBeInTheDocument()
     const svg = form?.querySelector("svg")
     expect(svg).toBeInTheDocument()
@@ -45,8 +45,9 @@ describe("TokenSearchBar", () => {
 
   it("forwards autoFocus prop to the input", () => {
     render(<TokenSearchBar autoFocus />)
-    // autoFocus is set as a DOM attribute
-    expect(screen.getByRole("textbox")).toHaveAttribute("autofocus")
+    // React's autoFocus calls .focus() imperatively on mount rather than
+    // setting the DOM attribute, so assert the focus state, not the attr.
+    expect(screen.getByRole("combobox")).toHaveFocus()
   })
 
   // ─── Controlled input ──────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ describe("TokenSearchBar", () => {
   it("updates input value as the user types", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    const input = screen.getByRole("textbox")
+    const input = screen.getByRole("combobox")
     await user.type(input, "USDC")
     expect(input).toHaveValue("USDC")
   })
@@ -71,7 +72,7 @@ describe("TokenSearchBar", () => {
   it("does NOT navigate when the input contains only whitespace", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.type(screen.getByRole("textbox"), "   ")
+    await user.type(screen.getByRole("combobox"), "   ")
     await user.click(screen.getByRole("button"))
     expect(navigateMock).not.toHaveBeenCalled()
   })
@@ -89,7 +90,7 @@ describe("TokenSearchBar", () => {
   it("navigates to /explore/<query> when a non-empty query is submitted via button", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.type(screen.getByRole("textbox"), "USDC")
+    await user.type(screen.getByRole("combobox"), "USDC")
     await user.click(screen.getByRole("button"))
     expect(navigateMock).toHaveBeenCalledWith("/explore/USDC")
   })
@@ -97,7 +98,7 @@ describe("TokenSearchBar", () => {
   it("trims whitespace from the query before navigating", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.type(screen.getByRole("textbox"), "  XLM  ")
+    await user.type(screen.getByRole("combobox"), "  XLM  ")
     await user.click(screen.getByRole("button"))
     expect(navigateMock).toHaveBeenCalledWith("/explore/XLM")
   })
@@ -106,9 +107,9 @@ describe("TokenSearchBar", () => {
     const { trackEvent } = await import("@/lib/analytics")
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.type(screen.getByRole("textbox"), "USDC")
+    await user.type(screen.getByRole("combobox"), "USDC")
     await user.click(screen.getByRole("button"))
-    expect(trackEvent).toHaveBeenCalledWith("explorer_search")
+    expect(trackEvent).toHaveBeenCalledWith("explorer_search", { source: "manual" })
   })
 
   // ─── Submit via Enter key ──────────────────────────────────────────────────
@@ -116,7 +117,7 @@ describe("TokenSearchBar", () => {
   it("navigates when Enter is pressed in the input", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    const input = screen.getByRole("textbox")
+    const input = screen.getByRole("combobox")
     await user.type(input, "AQUA")
     await user.keyboard("{Enter}")
     expect(navigateMock).toHaveBeenCalledWith("/explore/AQUA")
@@ -125,7 +126,7 @@ describe("TokenSearchBar", () => {
   it("does NOT navigate when Enter is pressed on an empty input", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.click(screen.getByRole("textbox"))
+    await user.click(screen.getByRole("combobox"))
     await user.keyboard("{Enter}")
     expect(navigateMock).not.toHaveBeenCalled()
   })
@@ -135,11 +136,9 @@ describe("TokenSearchBar", () => {
   it("navigates with the raw query including special characters", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.type(screen.getByRole("textbox"), "CBFCKEOQRQIXKLGU4QBUQVOINOKFBOXJ37LXEKLKNUO6TW4FNGDU26AW")
+    await user.type(screen.getByRole("combobox"), "CBFCKEOQRQIXKLGU4QBUQVOINOKFBOXJ37LXEKLKNUO6TW4FNGDU26AW")
     await user.click(screen.getByRole("button"))
-    expect(navigateMock).toHaveBeenCalledWith(
-      "/explore/CBFCKEOQRQIXKLGU4QBUQVOINOKFBOXJ37LXEKLKNUO6TW4FNGDU26AW",
-    )
+    expect(navigateMock).toHaveBeenCalledWith("/explore/CBFCKEOQRQIXKLGU4QBUQVOINOKFBOXJ37LXEKLKNUO6TW4FNGDU26AW")
   })
 
   // ─── No duplicate navigation on rapid clicks ──────────────────────────────
@@ -147,11 +146,12 @@ describe("TokenSearchBar", () => {
   it("calls navigate once per submit even on rapid clicks", async () => {
     const user = userEvent.setup()
     render(<TokenSearchBar />)
-    await user.type(screen.getByRole("textbox"), "XLM")
+    await user.type(screen.getByRole("combobox"), "XLM")
     const btn = screen.getByRole("button")
     await user.click(btn)
     await user.click(btn)
-    // Each click is a valid submit — both should navigate
-    expect(navigateMock).toHaveBeenCalledTimes(2)
+    // submit() clears the query after navigating, so the second click finds
+    // an empty value and bails out via the `if (!value) return` guard.
+    expect(navigateMock).toHaveBeenCalledTimes(1)
   })
 })
