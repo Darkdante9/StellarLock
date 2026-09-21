@@ -833,7 +833,7 @@ impl TokenLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         let execute_after = env.ledger().timestamp() + UPGRADE_DELAY;
         let proposal = UpgradeProposal {
@@ -857,7 +857,7 @@ impl TokenLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         let proposal: UpgradeProposal = env
             .storage()
@@ -879,7 +879,7 @@ impl TokenLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage()
             .instance()
@@ -900,7 +900,7 @@ impl TokenLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage().instance().set(&DataKey::Paused, &true);
         env.storage()
@@ -918,7 +918,7 @@ impl TokenLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage().instance().set(&DataKey::Paused, &false);
         env.storage()

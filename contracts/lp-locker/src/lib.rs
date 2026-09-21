@@ -79,6 +79,7 @@ pub enum ContractError {
     LockDurationTooLong = 24,
     ContractPaused = 21,
     ExtensionLimitExceeded = 22,
+    NotInitialized = 25,
 }
 
 // ── On-chain types ────────────────────────────────────────────────────────────
@@ -843,7 +844,7 @@ impl LpLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage()
             .instance()
@@ -893,7 +894,7 @@ impl LpLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         let execute_after = env.ledger().timestamp() + UPGRADE_DELAY;
         let proposal = UpgradeProposal {
@@ -916,7 +917,7 @@ impl LpLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         let proposal: UpgradeProposal = env
             .storage()
@@ -937,7 +938,7 @@ impl LpLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage()
             .instance()
@@ -958,7 +959,7 @@ impl LpLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage().instance().set(&DataKey::Paused, &true);
         env.storage()
@@ -976,7 +977,7 @@ impl LpLocker {
             .storage()
             .instance()
             .get(&DataKey::Admin)
-            .ok_or(ContractError::NotAdmin)?;
+            .ok_or(ContractError::NotInitialized)?;
         admin.require_auth();
         env.storage().instance().set(&DataKey::Paused, &false);
         env.storage()
