@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { screen } from "@testing-library/react"
-import { render } from "./utils"
+import { render, expectNoRenderedContent, getComponentAlert } from "./utils"
 import { FormValidationErrors } from "@/components/locks/FormValidationErrors"
 import type { FieldValidationIssue } from "@/lib/validation/lockFormValidation"
 
@@ -35,12 +35,12 @@ const multipleIssues: FieldValidationIssue[] = [
 describe("FormValidationErrors", () => {
   it("renders nothing when issues array is empty", () => {
     const { container } = render(<FormValidationErrors issues={[]} />)
-    expect(container).toBeEmptyDOMElement()
+    expectNoRenderedContent(container)
   })
 
   it("renders the error container when issues are present", () => {
     render(<FormValidationErrors issues={singleIssue} />)
-    expect(screen.getByRole("alert")).toBeInTheDocument()
+    expect(getComponentAlert()).toBeInTheDocument()
   })
 
   it("shows correct singular problem count for one issue", () => {
@@ -89,20 +89,20 @@ describe("FormValidationErrors", () => {
 
   it("has aria-live='polite' and role='alert' for accessibility", () => {
     render(<FormValidationErrors issues={singleIssue} />)
-    const alert = screen.getByRole("alert")
+    const alert = getComponentAlert()
     expect(alert).toHaveAttribute("aria-live", "polite")
     expect(alert).toHaveAttribute("aria-atomic", "true")
   })
 
   it("has a negative tabIndex so the container is programmatically focusable", () => {
     render(<FormValidationErrors issues={singleIssue} />)
-    const alert = screen.getByRole("alert")
+    const alert = getComponentAlert()
     expect(alert).toHaveAttribute("tabindex", "-1")
   })
 
   it("renders an AlertTriangle icon inside the container", () => {
     render(<FormValidationErrors issues={singleIssue} />)
-    const alert = screen.getByRole("alert")
+    const alert = getComponentAlert()
     expect(alert.querySelector("svg")).toBeInTheDocument()
   })
 

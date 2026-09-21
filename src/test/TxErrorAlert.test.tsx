@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { screen } from "@testing-library/react"
-import { render } from "./utils"
+import { render, expectNoRenderedContent, getComponentAlert } from "./utils"
 import { TxErrorAlert } from "@/components/ui/TxErrorAlert"
 import type { StructuredError } from "@/lib/errors"
 
@@ -16,12 +16,12 @@ const baseError: StructuredError = {
 describe("TxErrorAlert", () => {
   it("renders nothing when error is null", () => {
     const { container } = render(<TxErrorAlert error={null} />)
-    expect(container).toBeEmptyDOMElement()
+    expectNoRenderedContent(container)
   })
 
   it("renders the title and message for a structured error", () => {
     render(<TxErrorAlert error={baseError} />)
-    expect(screen.getByRole("alert")).toBeInTheDocument()
+    expect(getComponentAlert()).toBeInTheDocument()
     expect(screen.getByText("Invalid Amount")).toBeInTheDocument()
     expect(screen.getByText("Lock amount must be greater than zero.")).toBeInTheDocument()
   })

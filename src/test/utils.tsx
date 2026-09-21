@@ -1,6 +1,6 @@
 import { ReactElement } from "react"
 import { expect } from "vitest"
-import { render, RenderOptions } from "@testing-library/react"
+import { render, RenderOptions, screen } from "@testing-library/react"
 import { BrowserRouter } from "react-router-dom"
 import { HelmetProvider } from "react-helmet-async"
 import { I18nextProvider } from "react-i18next"
@@ -35,5 +35,17 @@ function expectNoRenderedContent(container: HTMLElement) {
   expect(meaningfulChildren).toHaveLength(0)
 }
 
+// AnnouncerProvider's own role="alert" live region means screen.getByRole
+// ("alert") throws "found multiple elements" for any component that also
+// renders a role="alert" of its own. The announcer's is always visually
+// hidden (sr-only); the component's own alert is meant to be seen, so filter
+// on that to get the one the test actually wants.
+function getComponentAlert(): HTMLElement {
+  const alerts = screen.getAllByRole("alert")
+  const real = alerts.find((el) => !el.className.includes("sr-only"))
+  if (!real) throw new Error('No non-announcer role="alert" element found')
+  return real
+}
+
 export * from "@testing-library/react"
-export { customRender as render, expectNoRenderedContent }
+export { customRender as render, expectNoRenderedContent, getComponentAlert }
