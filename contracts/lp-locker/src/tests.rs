@@ -50,7 +50,7 @@ fn create_lp_lock_valid_inputs() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -80,7 +80,7 @@ fn create_lp_lock_rejects_zero_amount() {
     let creator = Address::generate(&env);
     let beneficiary = Address::generate(&env);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let result = client.try_create_lock(
         &creator,
         &pool_share_id,
@@ -130,7 +130,7 @@ fn beneficiary_can_withdraw_after_unlock() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -144,7 +144,7 @@ fn beneficiary_can_withdraw_after_unlock() {
         &empty_metadata(&env),
     );
 
-    advance_time(&env, 200);
+    advance_time(&env, 200_000);
     client.withdraw(&lock_id);
 
     assert!(client.get_lock(&lock_id).unwrap().withdrawn);
@@ -159,7 +159,7 @@ fn withdraw_fails_before_unlock_at() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -186,7 +186,7 @@ fn withdraw_twice_is_rejected() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -200,7 +200,7 @@ fn withdraw_twice_is_rejected() {
         &empty_metadata(&env),
     );
 
-    advance_time(&env, 200);
+    advance_time(&env, 200_000);
     client.withdraw(&lock_id);
 
     let result = client.try_withdraw(&lock_id);
@@ -218,7 +218,7 @@ fn creator_can_extend_lp_lock() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -249,7 +249,7 @@ fn extend_cannot_decrease_unlock_time() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -276,7 +276,7 @@ fn extend_after_withdrawal_fails() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -290,7 +290,7 @@ fn extend_after_withdrawal_fails() {
         &empty_metadata(&env),
     );
 
-    advance_time(&env, 200);
+    advance_time(&env, 200_000);
     client.withdraw(&lock_id);
 
     let result = client.try_extend(&lock_id, &(unlock_at + 1000));
@@ -317,7 +317,7 @@ fn extend_on_missing_lock_returns_lock_not_found() {
     let (env, contract_id, _pool_share_id, _token_a, _token_b) = setup_env();
     let client = LpLockerClient::new(&env, &contract_id);
 
-    let result = client.try_extend(&999_999, &(env.ledger().timestamp() + 100));
+    let result = client.try_extend(&999_999, &(env.ledger().timestamp() + 100_000));
     assert_eq!(
         result,
         Err(Ok(ContractError::LockNotFound)),
@@ -351,7 +351,7 @@ fn transfer_beneficiary_and_new_beneficiary_can_withdraw() {
     let new_beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -370,7 +370,7 @@ fn transfer_beneficiary_and_new_beneficiary_can_withdraw() {
     let lock = client.get_lock(&lock_id).unwrap();
     assert_eq!(lock.beneficiary, new_beneficiary);
 
-    advance_time(&env, 200);
+    advance_time(&env, 200_000);
     client.withdraw(&lock_id);
 
     assert!(client.get_lock(&lock_id).unwrap().withdrawn);
@@ -386,7 +386,7 @@ fn transfer_beneficiary_updates_indexes() {
     let new_beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -426,7 +426,7 @@ fn get_locks_by_creator_returns_correct_locks() {
     mint(&env, &pool_share_id, &creator_a, 5_000);
     mint(&env, &pool_share_id, &creator_b, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let id1 = client.create_lock(
         &creator_a,
         &pool_share_id,
@@ -448,7 +448,7 @@ fn get_locks_by_creator_returns_correct_locks() {
         &token_b,
         &200_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -460,7 +460,7 @@ fn get_locks_by_creator_returns_correct_locks() {
         &token_b,
         &300_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -491,7 +491,7 @@ fn get_locks_by_pool_share_works() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let id1 = client.create_lock(
         &creator,
         &pool_share_id,
@@ -513,7 +513,7 @@ fn get_locks_by_pool_share_works() {
         &token_b,
         &300_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -545,7 +545,7 @@ fn different_pool_shares_have_isolated_indexes() {
     mint(&env, &pool_share_a, &creator, 5_000);
     mint(&env, &pool_share_b, &creator, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     client.create_lock(
         &creator,
         &pool_share_a,
@@ -567,7 +567,7 @@ fn different_pool_shares_have_isolated_indexes() {
         &token_b,
         &200_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -587,7 +587,7 @@ fn lp_tvl_increases_on_create_decreases_on_withdraw() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id_1 = client.create_lock(
         &creator,
         &pool_share_id,
@@ -609,7 +609,7 @@ fn lp_tvl_increases_on_create_decreases_on_withdraw() {
         &token_b,
         &600_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -620,8 +620,8 @@ fn lp_tvl_increases_on_create_decreases_on_withdraw() {
     assert_eq!(stats.total_lock_count, 2);
     assert_eq!(stats.unique_pool_share_count, 1);
 
-    // Total elapsed at this point is 61s; advance past lock_id_1's unlock_at (+1000s from start).
-    advance_time(&env, 1000);
+    // Total elapsed at this point is 61s; advance past lock_id_1's unlock_at (+100_000s from start).
+    advance_time(&env, 100_000);
     client.withdraw(&lock_id_1);
 
     assert_eq!(client.get_total_locked(&pool_share_id), 600_i128);
@@ -640,7 +640,7 @@ fn lp_global_stats_counts_unique_pool_shares() {
     mint(&env, &pool_share_a, &creator, 5_000);
     mint(&env, &pool_share_b, &creator, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     client.create_lock(
         &creator,
         &pool_share_a,
@@ -662,7 +662,7 @@ fn lp_global_stats_counts_unique_pool_shares() {
         &token_b,
         &200_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -690,7 +690,7 @@ fn create_lock_returns_typed_error_on_tvl_overflow() {
         );
     });
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let result = client.try_create_lock(
         &creator,
         &pool_share_id,
@@ -727,7 +727,7 @@ fn create_lock_near_overflow_boundary_succeeds() {
         );
     });
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     client.create_lock(
         &creator,
         &pool_share_id,
@@ -756,7 +756,7 @@ fn three_accounts_full_lp_flow() {
     let unauthorized = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -776,7 +776,7 @@ fn three_accounts_full_lp_flow() {
     assert_eq!(client.get_lock_count_by_beneficiary(&beneficiary), 1);
 
     client.extend(&lock_id, &(unlock_at + 500));
-    advance_time(&env, 700);
+    advance_time(&env, 100_600);
     client.withdraw(&lock_id);
 
     assert!(client.get_lock(&lock_id).unwrap().withdrawn);
@@ -893,7 +893,7 @@ fn create_lock_stores_metadata() {
         logo_url: soroban_sdk::String::from_str(&env, "https://example.com/logo.png"),
     };
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -923,7 +923,7 @@ fn create_lock_without_metadata_leaves_it_empty() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -953,7 +953,7 @@ fn unauthorized_address_cannot_withdraw() {
     let unauthorized = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -967,7 +967,7 @@ fn unauthorized_address_cannot_withdraw() {
         &empty_metadata(&env),
     );
 
-    advance_time(&env, 200);
+    advance_time(&env, 200_000);
 
     env.mock_auths(&[]);
     let _ = &unauthorized;
@@ -990,7 +990,7 @@ fn unauthorized_address_cannot_extend() {
     let unauthorized = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -1026,7 +1026,7 @@ fn unauthorized_address_cannot_transfer_beneficiary() {
     let unauthorized = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let lock_id = client.create_lock(
         &creator,
         &pool_share_id,
@@ -1077,7 +1077,7 @@ fn vesting_end_must_be_after_start() {
         &token_b,
         &100_i128,
         &beneficiary,
-        &(now + 2_000),
+        &(now + 100_000),
         &Some(bad_vesting),
         &empty_metadata(&env),
     );
@@ -1096,7 +1096,7 @@ fn partial_vested_withdrawal_does_not_mark_fully_withdrawn() {
     let now = env.ledger().timestamp();
     let vesting = Vesting {
         start: now,
-        end: now + 1_000,
+        end: now + 200_000,
         released: 0,
     };
 
@@ -1108,13 +1108,14 @@ fn partial_vested_withdrawal_does_not_mark_fully_withdrawn() {
         &token_b,
         &1_000_i128,
         &beneficiary,
-        &(now + 1),
+        &(now + 100_000),
         &Some(vesting),
         &empty_metadata(&env),
     );
 
-    // Advance to 50 % of the vesting window — only half should be releasable.
-    advance_time(&env, 500);
+    // Advance to 50 % of the vesting window (which also clears unlock_at) —
+    // only half should be releasable.
+    advance_time(&env, 100_000);
     client.withdraw(&lock_id);
 
     // Lock must NOT be marked fully withdrawn after a partial release.
@@ -1145,13 +1146,14 @@ fn full_vesting_marks_withdrawn() {
         &token_b,
         &1_000_i128,
         &beneficiary,
-        &(now + 1),
+        &(now + 100_000),
         &Some(vesting),
         &empty_metadata(&env),
     );
 
-    // Advance past the end of the vesting window — everything should be releasable.
-    advance_time(&env, 1_500);
+    // Advance past both unlock_at and the end of the vesting window —
+    // everything should be releasable.
+    advance_time(&env, 150_000);
     client.withdraw(&lock_id);
 
     assert!(client.get_lock(&lock_id).unwrap().withdrawn);
@@ -1167,7 +1169,7 @@ fn vesting_proportional_release_at_midpoint() {
     mint(&env, &pool_share_id, &creator, 10_000);
 
     let now = env.ledger().timestamp();
-    let vesting_duration = 1_000_u64;
+    let vesting_duration = 200_000_u64;
     let vesting = Vesting {
         start: now,
         end: now + vesting_duration,
@@ -1182,7 +1184,7 @@ fn vesting_proportional_release_at_midpoint() {
         &token_b,
         &1_000_i128,
         &beneficiary,
-        &(now + 1),
+        &(now + 100_000),
         &Some(vesting),
         &empty_metadata(&env),
     );
@@ -1214,8 +1216,8 @@ fn vesting_nothing_to_release_before_start() {
 
     let now = env.ledger().timestamp();
     let vesting = Vesting {
-        start: now + 500, // vesting hasn't begun yet
-        end: now + 1_500,
+        start: now + 150_000, // vesting hasn't begun yet
+        end: now + 250_000,
         released: 0,
     };
 
@@ -1227,13 +1229,13 @@ fn vesting_nothing_to_release_before_start() {
         &token_b,
         &1_000_i128,
         &beneficiary,
-        &(now + 1), // unlock_at is before vesting start
+        &(now + 100_000), // unlock_at is before vesting start
         &Some(vesting),
         &empty_metadata(&env),
     );
 
     // Advance past unlock_at but before vesting start.
-    advance_time(&env, 100);
+    advance_time(&env, 120_000);
     let result = client.try_withdraw(&lock_id);
     assert_eq!(
         result,
@@ -1255,11 +1257,11 @@ fn split_lock_with_vesting_allocates_and_vests_correctly() {
     let now = env.ledger().timestamp();
     let vesting = Vesting {
         start: now,
-        end: now + 1_000,
+        end: now + 200_000,
         released: 0,
     };
 
-    let unlock_at = now + 1;
+    let unlock_at = now + 100_000;
     let group_id = client.create_split_lock(
         &creator,
         &pool_share_id,
@@ -1286,8 +1288,9 @@ fn split_lock_with_vesting_allocates_and_vests_correctly() {
     assert_eq!(lock1.amount, 3_000_i128);
     assert!(!lock1.vesting.is_none());
 
-    // Advance to midpoint — b1 should get 50 % of their 7 000 share.
-    advance_time(&env, 500);
+    // Advance to midpoint (which also clears unlock_at) — b1 should get
+    // 50 % of their 7 000 share.
+    advance_time(&env, 100_000);
     client.withdraw(&group_id);
 
     let lock0_after = client.get_lock(&group_id).unwrap();
@@ -1320,7 +1323,7 @@ fn split_lock_vesting_end_before_start_is_rejected() {
         &token_b,
         &10_000_i128,
         &soroban_sdk::vec![&env, (b1, 5_000_u64), (b2, 5_000_u64)],
-        &(now + 1),
+        &(now + 100_000),
         &Some(bad_vesting),
     );
     assert_eq!(result, Err(Ok(ContractError::VestingEndBeforeStart)));
@@ -1337,7 +1340,7 @@ fn create_lock_rate_limit_rejects_rapid_second_call() {
     let beneficiary = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
 
     // First call must succeed.
     client.create_lock(
@@ -1362,7 +1365,7 @@ fn create_lock_rate_limit_rejects_rapid_second_call() {
         &token_b,
         &100_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 1000),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -1382,7 +1385,7 @@ fn create_lock_rate_limit_rejects_rapid_second_call() {
         &token_b,
         &100_i128,
         &beneficiary,
-        &(env.ledger().timestamp() + 1000),
+        &(env.ledger().timestamp() + 100_000),
         &None,
         &empty_metadata(&env),
     );
@@ -1400,7 +1403,7 @@ fn create_lock_rate_limit_is_per_creator() {
     mint(&env, &pool_share_id, &creator_a, 5_000);
     mint(&env, &pool_share_id, &creator_b, 5_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
 
     client.create_lock(
         &creator_a,
@@ -1441,7 +1444,7 @@ fn create_split_lock_two_beneficiaries_correct_amounts() {
     let b2 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 10_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let group_id = client.create_split_lock(
         &creator,
         &pool_share_id,
@@ -1482,7 +1485,7 @@ fn create_split_lock_three_way_amounts() {
     let b3 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 9_000);
 
-    let unlock_at = env.ledger().timestamp() + 200;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let group_id = client.create_split_lock(
         &creator,
         &pool_share_id,
@@ -1534,7 +1537,7 @@ fn create_split_lock_rejects_zero_amount() {
         &token_b,
         &0_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 5_000_u64), (b2.clone(), 5_000_u64)],
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
     assert_eq!(result, Err(Ok(ContractError::AmountMustBePositive)));
@@ -1580,7 +1583,7 @@ fn create_split_lock_rejects_single_beneficiary() {
         &token_b,
         &1_000_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 10_000_u64)],
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
     assert_eq!(result, Err(Ok(ContractError::TooFewBeneficiaries)));
@@ -1604,7 +1607,7 @@ fn create_split_lock_rejects_bps_not_10000() {
         &token_b,
         &1_000_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 4_000_u64), (b2.clone(), 4_000_u64)],
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
     assert_eq!(result, Err(Ok(ContractError::SharesMustSum10000)));
@@ -1622,7 +1625,7 @@ fn split_lock_sub_locks_appear_in_beneficiary_index() {
     let b2 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     client.create_split_lock(
         &creator,
         &pool_share_id,
@@ -1657,7 +1660,7 @@ fn split_lock_sub_locks_in_creator_and_pool_share_indexes() {
     let b2 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 2_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     client.create_split_lock(
         &creator,
         &pool_share_id,
@@ -1692,7 +1695,7 @@ fn get_split_groups_by_creator_returns_group() {
         &token_b,
         &1_000_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 6_000_u64), (b2.clone(), 4_000_u64)],
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
 
@@ -1711,7 +1714,7 @@ fn get_split_groups_by_creator_pagination_works() {
     let b2 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 10_000);
 
-    let _unlock_at = env.ledger().timestamp() + 10_000;
+    let _unlock_at = env.ledger().timestamp() + 100_000;
     for _ in 0..3_u32 {
         client.create_split_lock(
             &creator,
@@ -1721,7 +1724,7 @@ fn get_split_groups_by_creator_pagination_works() {
             &token_b,
             &1_000_i128,
             &soroban_sdk::vec![&env, (b1.clone(), 5_000_u64), (b2.clone(), 5_000_u64)],
-            &(env.ledger().timestamp() + 100),
+            &(env.ledger().timestamp() + 100_000),
             &None,
         );
         advance_time(&env, 61);
@@ -1761,7 +1764,7 @@ fn split_lock_tvl_and_global_stats() {
         &token_b,
         &4_000_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 5_000_u64), (b2.clone(), 5_000_u64)],
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
 
@@ -1782,7 +1785,7 @@ fn split_lock_tvl_adds_to_existing_regular_lock() {
     let b2 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 10_000);
 
-    let unlock_at = env.ledger().timestamp() + 1000;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     client.create_lock(
         &creator,
         &pool_share_id,
@@ -1804,7 +1807,7 @@ fn split_lock_tvl_adds_to_existing_regular_lock() {
         &token_b,
         &2_000_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 5_000_u64), (b2.clone(), 5_000_u64)],
-        &(env.ledger().timestamp() + 100),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
 
@@ -1826,7 +1829,7 @@ fn split_lock_beneficiaries_withdraw_independently() {
     let b2 = Address::generate(&env);
     mint(&env, &pool_share_id, &creator, 1_000);
 
-    let unlock_at = env.ledger().timestamp() + 100;
+    let unlock_at = env.ledger().timestamp() + 100_000;
     let group_id = client.create_split_lock(
         &creator,
         &pool_share_id,
@@ -1842,7 +1845,7 @@ fn split_lock_beneficiaries_withdraw_independently() {
     let group = client.get_split_group(&group_id).unwrap();
     let id_b2 = group.lock_ids.get(1).unwrap();
 
-    advance_time(&env, 200);
+    advance_time(&env, 200_000);
 
     client.withdraw(&group_id);
     assert!(client.get_lock(&group_id).unwrap().withdrawn);
@@ -1870,7 +1873,7 @@ fn split_lock_sub_lock_still_locked_before_unlock() {
         &token_b,
         &1_000_i128,
         &soroban_sdk::vec![&env, (b1.clone(), 5_000_u64), (b2.clone(), 5_000_u64)],
-        &(env.ledger().timestamp() + 1_000),
+        &(env.ledger().timestamp() + 100_000),
         &None,
     );
 
