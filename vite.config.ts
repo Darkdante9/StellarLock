@@ -13,6 +13,12 @@ export default defineConfig({
   optimizeDeps: {
     include: [],
   },
+  // Some wallet-connector dependencies (e.g. @near-js/crypto, pulled in
+  // transitively by @creit.tech/stellar-wallets-kit) assume Node's `global`
+  // exists, which throws at import time in a browser without this.
+  define: {
+    global: "globalThis",
+  },
   server: {
     host: true,
     allowedHosts: true,
