@@ -22,7 +22,11 @@ describe("TokenLockList", () => {
   })
 
   it("renders one item per lock when populated", () => {
-    const other: Lock = { ...mockLock, id: "lock-2", beneficiary: "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBWHF" }
+    const other: Lock = {
+      ...mockLock,
+      id: "lock-2",
+      beneficiary: "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBWHF",
+    }
     render(<TokenLockList locks={[mockLock, other]} />)
     expect(screen.getAllByRole("listitem")).toHaveLength(2)
   })
@@ -34,7 +38,9 @@ describe("TokenLockList", () => {
 
   it("renders the locked amount and USD value", () => {
     render(<TokenLockList locks={[mockLock]} />)
-    expect(screen.getByText(/1[,.]?000|1K/i)).toBeInTheDocument()
+    // The compact "1K" amount and the nested "$1,000.00" USD value both
+    // match this regex.
+    expect(screen.getAllByText(/1[,.]?000|1K/i).length).toBeGreaterThan(0)
   })
 
   it("renders the beneficiary short address", () => {

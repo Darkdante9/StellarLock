@@ -54,8 +54,10 @@ describe("LockTable", () => {
 
   it("renders one row per lock", () => {
     render(<LockTable locks={[mockLock, secondLock]} />)
-    expect(screen.getByText("USDC")).toBeInTheDocument()
-    expect(screen.getByText("XLM")).toBeInTheDocument()
+    // "USDC"/"XLM" each appear twice (the mocked TokenAvatar echoes the
+    // symbol as text, alongside the table's own symbol cell).
+    expect(screen.getAllByText("USDC").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("XLM").length).toBeGreaterThan(0)
   })
 
   it("renders no data rows when locks is empty", () => {
@@ -66,7 +68,9 @@ describe("LockTable", () => {
 
   it("renders the locked amount and USD value", () => {
     render(<LockTable locks={[mockLock]} />)
-    expect(screen.getByText(/1[,.]?000|1K/i)).toBeInTheDocument()
+    // The compact "1K" amount and the nested "$1,000.00" USD value both
+    // match this regex.
+    expect(screen.getAllByText(/1[,.]?000|1K/i).length).toBeGreaterThan(0)
   })
 
   it("renders the beneficiary short address", () => {
@@ -115,9 +119,7 @@ describe("LockTable", () => {
 
     it("does not render the view link column when selectable", () => {
       render(<LockTable locks={[mockLock]} selectable />)
-      expect(
-        screen.queryByRole("link", { name: new RegExp(`lock ${mockLock.id}`, "i") }),
-      ).not.toBeInTheDocument()
+      expect(screen.queryByRole("link", { name: new RegExp(`lock ${mockLock.id}`, "i") })).not.toBeInTheDocument()
     })
 
     it("marks a row's checkbox as checked when its id is in selectedIds", () => {
@@ -147,14 +149,7 @@ describe("LockTable", () => {
     it("toggles off via onSelect when an already-selected row is clicked", async () => {
       const user = userEvent.setup()
       const onSelect = vi.fn()
-      render(
-        <LockTable
-          locks={[mockLock]}
-          selectable
-          selectedIds={new Set([mockLock.id])}
-          onSelect={onSelect}
-        />,
-      )
+      render(<LockTable locks={[mockLock]} selectable selectedIds={new Set([mockLock.id])} onSelect={onSelect} />)
       const dataRow = screen.getAllByRole("row")[1]
       await user.click(dataRow)
       expect(onSelect).toHaveBeenCalledWith(mockLock.id, false)
