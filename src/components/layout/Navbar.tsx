@@ -28,12 +28,9 @@ export function Navbar() {
   const mod = isMac ? "⌘" : "Ctrl"
 
   const navLinks = [
-    { to: "/explore", label: t("nav.explore"), hint: `${mod}+K` },
-    { to: "/app/create", label: t("nav.createLock"), hint: `${mod}+N` },
-    { to: "/app/locks", label: t("nav.myLocks"), hint: `${mod}+L` },
-    { to: "/explore", label: t("nav.explore"), prefetchFn: prefetch.discover },
-    { to: "/app/create", label: t("nav.createLock"), prefetchFn: prefetch.createLock },
-    { to: "/app/locks", label: t("nav.myLocks"), prefetchFn: prefetch.myLocks },
+    { to: "/explore", label: t("nav.explore"), hint: `${mod}+K`, prefetchFn: prefetch.discover },
+    { to: "/app/create", label: t("nav.createLock"), hint: `${mod}+N`, prefetchFn: prefetch.createLock },
+    { to: "/app/locks", label: t("nav.myLocks"), hint: `${mod}+L`, prefetchFn: prefetch.myLocks },
     { to: "/app/history", label: t("nav.history"), prefetchFn: prefetch.history },
     { to: "/app/analytics", label: t("nav.analytics"), prefetchFn: prefetch.analytics },
   ]
