@@ -44,20 +44,24 @@ describe("LockCard", () => {
 
   it("renders token symbol and name", () => {
     render(<LockCard lock={mockLock} />)
-    expect(screen.getByText("USDC")).toBeInTheDocument()
+    // "USDC" appears both in the mocked TokenAvatar (echoes symbol as text)
+    // and the card's own symbol label, so it's not unique.
+    expect(screen.getAllByText("USDC").length).toBeGreaterThan(0)
     expect(screen.getByText("USD Coin")).toBeInTheDocument()
   })
 
   it("renders the locked amount", () => {
     render(<LockCard lock={mockLock} />)
-    // formatAmount with compact flag — just confirm some amount text is present
-    expect(screen.getByText(/1[,.]?000|1K/i)).toBeInTheDocument()
+    // formatAmount renders "1K" next to the nested "$1,000.00" USD value —
+    // both match this regex, so just confirm some amount text is present.
+    expect(screen.getAllByText(/1[,.]?000|1K/i).length).toBeGreaterThan(0)
   })
 
   it("renders StatusBadge with correct status", () => {
     render(<LockCard lock={mockLock} />)
-    // StatusBadge renders the status text
-    expect(screen.getByText(/locked/i)).toBeInTheDocument()
+    // StatusBadge renders the status text. Exact match (not /locked/i) since
+    // the "Locked amount" label elsewhere on the card also matches that regex.
+    expect(screen.getByText("Locked")).toBeInTheDocument()
   })
 
   it("renders as a link pointing to the lock detail page", () => {
@@ -97,8 +101,9 @@ describe("LockCard", () => {
       },
     }
     render(<LockCard lock={lpLock} />)
-    // DexBadge renders the dex name
-    expect(screen.getByText(/aquarius/i)).toBeInTheDocument()
+    // Exact match (not /aquarius/i) since this lock's own token.name
+    // ("Aquarius LP") also matches that regex.
+    expect(screen.getByText("Aquarius")).toBeInTheDocument()
   })
 
   it("shows extended count badge when extendedCount > 0", () => {
@@ -115,20 +120,36 @@ describe("LockCard", () => {
   it("renders the short beneficiary address", () => {
     render(<LockCard lock={mockLock} />)
     // shortAddress truncates the key — verify something from the address is shown
-    expect(screen.getByText(/GAAAAA/i)).toBeInTheDocument()
+    // shortAddress()'s default lead is 4 chars ("GAAA"), not 6
+    expect(screen.getByText(/GAAA/i)).toBeInTheDocument()
   })
 
   describe("selectable mode", () => {
+    // In selectable mode there are *two* role="checkbox" elements: the outer
+    // wrapper div (for whole-card click/keyboard selection) and the native
+    // <input type="checkbox">. The div has no aria-label of its own, so its
+    // accessible name is computed from descendant content — which includes
+    // the input's aria-label — so `{ name: /select lock/i }` matches both.
+    function getSelectCheckboxInput(): HTMLInputElement {
+      return screen
+        .getAllByRole("checkbox", { name: /select lock/i })
+        .find((el): el is HTMLInputElement => el.tagName === "INPUT")!
+    }
+
+    function getSelectCheckboxWrapper(): HTMLElement {
+      return screen.getAllByRole("checkbox", { name: /select lock/i }).find((el) => el.tagName === "DIV")!
+    }
+
     it("renders a checkbox when selectable=true", () => {
       render(<LockCard lock={mockLock} selectable />)
-      const checkbox = screen.getByRole("checkbox", { name: /select lock/i })
+      const checkbox = getSelectCheckboxInput()
       expect(checkbox).toBeInTheDocument()
       expect(checkbox).not.toBeChecked()
     })
 
     it("renders checkbox as checked when selected=true", () => {
       render(<LockCard lock={mockLock} selectable selected />)
-      const checkbox = screen.getByRole("checkbox", { name: /select lock/i })
+      const checkbox = getSelectCheckboxInput()
       expect(checkbox).toBeChecked()
     })
 
@@ -136,7 +157,7 @@ describe("LockCard", () => {
       const user = userEvent.setup()
       const onSelect = vi.fn()
       render(<LockCard lock={mockLock} selectable selected={false} onSelect={onSelect} />)
-      const checkbox = screen.getByRole("checkbox", { name: /select lock/i })
+      const checkbox = getSelectCheckboxInput()
       await user.click(checkbox)
       expect(onSelect).toHaveBeenCalledWith(mockLock.id, true)
     })
@@ -145,10 +166,7 @@ describe("LockCard", () => {
       const user = userEvent.setup()
       const onSelect = vi.fn()
       render(<LockCard lock={mockLock} selectable selected={false} onSelect={onSelect} />)
-      // The outer wrapper has role="checkbox"
-      const wrapper =
-        screen.getByRole("checkbox", { name: /select lock/i }).closest('[role="checkbox"]') ??
-        screen.getAllByRole("checkbox")[0].closest("div")!
+      const wrapper = getSelectCheckboxWrapper()
       await user.click(wrapper)
       expect(onSelect).toHaveBeenCalled()
     })
