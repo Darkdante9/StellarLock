@@ -6,8 +6,10 @@ import { AddressBookModal } from "@/components/ui/AddressBookModal"
 import type { AddressBookEntry } from "@/hooks/useAddressBook"
 
 // Valid Stellar addresses for testing
-const VALID_ADDRESS_1 = "GBZQAFZFZVFSVZ4NHCGC6ZTLJWMJRGEGWHP2D3YYYKRQ7VQZUAEZURW"
-const VALID_ADDRESS_2 = "GBJXWL2BQBNSWWJGZ4CIBKBFQCIDKN3Z3BVSKFUTASCTG3W7QSPDCVWJ"
+// Must be checksum-valid Stellar addresses (isValidStellarAddress rejects
+// anything else, silently failing every "add address" in this file).
+const VALID_ADDRESS_1 = "GCKGDUDRMGOIJYZIGPL2KG7G2KMUQIFE45S3TUSO3IQPKKFI2GJMB3VZ"
+const VALID_ADDRESS_2 = "GD2JXE6O6XSCCVAZCE2Y5MSYBEDR5ZUDQNJH7JRE3WRXGQTOC6H5VQDY"
 
 describe("AddressBookModal", () => {
   const mockOnClose = vi.fn()
@@ -53,11 +55,12 @@ describe("AddressBookModal", () => {
   it("calls onClose when clicking outside the modal", async () => {
     const user = userEvent.setup()
     render(<AddressBookModal onClose={mockOnClose} />)
-    const backdrop = screen.getByRole("dialog").parentElement
-    if (backdrop) {
-      await user.click(backdrop)
-      expect(mockOnClose).toHaveBeenCalled()
-    }
+    // The click-to-close handler is on the dialog element itself (it checks
+    // e.target === e.currentTarget to detect a backdrop click vs. a click
+    // inside the modal content) — not on some separate parent wrapper.
+    const backdrop = screen.getByRole("dialog")
+    await user.click(backdrop)
+    expect(mockOnClose).toHaveBeenCalled()
   })
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -100,7 +103,7 @@ describe("AddressBookModal", () => {
 
     // Verify the address is now displayed
     expect(screen.getByText("Test Wallet")).toBeInTheDocument()
-    expect(screen.getByText(/GBZQAFZ.*VQZUA/)).toBeInTheDocument()
+    expect(screen.getByText(/GCKGDUDR.*2GJMB3VZ/)).toBeInTheDocument()
   })
 
   it("shows error when adding without a label", async () => {
@@ -254,7 +257,7 @@ describe("AddressBookModal", () => {
 
     // Search by address
     const searchInput = screen.getByPlaceholderText("Search addresses…")
-    await user.type(searchInput, "GBZQAFZ")
+    await user.type(searchInput, "GCKGDUDR")
 
     expect(screen.getByText("My Address")).toBeInTheDocument()
   })
@@ -291,7 +294,7 @@ describe("AddressBookModal", () => {
     await user.click(screen.getByRole("button", { name: /Save/i }))
 
     // Check for Select button
-    const selectBtn = screen.getByRole("button", { name: /Select/i })
+    const selectBtn = screen.getByRole("button", { name: "Select" })
     expect(selectBtn).toBeInTheDocument()
   })
 
@@ -306,7 +309,7 @@ describe("AddressBookModal", () => {
     await user.click(screen.getByRole("button", { name: /Save/i }))
 
     // Click Select
-    const selectBtn = screen.getByRole("button", { name: /Select/i })
+    const selectBtn = screen.getByRole("button", { name: "Select" })
     await user.click(selectBtn)
 
     // Verify callbacks were called
