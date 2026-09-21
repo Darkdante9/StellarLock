@@ -149,9 +149,15 @@ export function BulkConfirmModal({ action, locks, onConfirm, onClose }: Props) {
                 </div>
               ))}
             </div>
-            <Button onClick={onClose} className="w-full">
-              Done
-            </Button>
+            {running ? (
+              <Button variant="outline" disabled className="w-full">
+                Cancel
+              </Button>
+            ) : (
+              <Button onClick={onClose} className="w-full">
+                Done
+              </Button>
+            )}
           </>
         )}
       </div>
