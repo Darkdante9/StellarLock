@@ -48,9 +48,6 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
-# Playwright visual snapshot directories
-e2e/**/*-snapshots/
-
 # Scratch / debug output files
 err_output.txt
 test_output.txt
