@@ -41,7 +41,7 @@ describe("WalletAlerts Component", () => {
 
     expect(screen.queryByText("Wallet disconnected")).not.toBeInTheDocument()
     expect(screen.queryByText("Network changed")).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: /back/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /dismiss/i })).not.toBeInTheDocument()
   })
 
   it("shows the disconnected alert when the wallet disconnects", () => {
@@ -103,7 +103,7 @@ describe("WalletAlerts Component", () => {
 
     render(<WalletAlerts />)
 
-    await user.click(screen.getByRole("button", { name: /back/i }))
+    await user.click(screen.getByRole("button", { name: /dismiss/i }))
 
     expect(dismissDisconnectAlert).toHaveBeenCalledOnce()
   })
@@ -122,7 +122,7 @@ describe("WalletAlerts Component", () => {
 
     render(<WalletAlerts />)
 
-    await user.click(screen.getByRole("button", { name: /back/i }))
+    await user.click(screen.getByRole("button", { name: /dismiss/i }))
 
     expect(dismissNetworkAlert).toHaveBeenCalledOnce()
   })
