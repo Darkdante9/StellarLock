@@ -103,6 +103,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # env.ts validates required VITE_* vars at app bootstrap, so both the
+      # build and the Playwright webServer's `pnpm dev` need them present.
+      - name: Set up environment
+        run: cp .env.testnet .env
+
       - name: Build Vite App
         run: pnpm build
 
