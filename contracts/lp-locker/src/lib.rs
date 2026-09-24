@@ -952,8 +952,11 @@ impl LpLocker {
 
     // ── Emergency pause mechanism ─────────────────────────────────────────────
 
-    /// Pause the contract, preventing all state-mutating operations.
-    /// Admin only. Read-only queries remain available.
+    /// Pause the contract, blocking lock creation, withdrawal, extension,
+    /// and beneficiary transfer. Admin functions (propose/execute/cancel
+    /// upgrade, propose/accept admin, pause/unpause itself) and all read-only
+    /// queries remain available while paused — see docs/incident-response.md.
+    /// Admin only.
     pub fn pause(env: Env) -> Result<(), ContractError> {
         let admin: Address = env
             .storage()
