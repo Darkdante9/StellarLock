@@ -42,6 +42,10 @@ export function initDb() {
     CREATE INDEX IF NOT EXISTS idx_locks_beneficiary ON locks(beneficiary);
     CREATE INDEX IF NOT EXISTS idx_locks_creator ON locks(creator);
     CREATE INDEX IF NOT EXISTS idx_locks_unlock_at ON locks(unlock_at);
+    -- Serves getStats()'s recentLocks (ORDER BY created_at DESC, id DESC LIMIT 10)
+    -- straight from the index instead of a full-table sort. id is included
+    -- because it's the tiebreaker and isn't the rowid (TEXT PRIMARY KEY).
+    CREATE INDEX IF NOT EXISTS idx_locks_created_at ON locks(created_at DESC, id DESC);
 
     CREATE TABLE IF NOT EXISTS lock_events (
       id TEXT PRIMARY KEY,
@@ -65,10 +69,32 @@ export function initDb() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_subs_lock    ON notification_subscriptions(lock_id);
-    CREATE INDEX IF NOT EXISTS idx_subs_address ON notification_subscriptions(address);
     CREATE INDEX IF NOT EXISTS idx_subs_pending ON notification_subscriptions(reminded_0d)
       WHERE reminded_0d = 0;
   `)
+
+  // subscribe/unsubscribe look subscriptions up by the (address, lock_id)
+  // pair, and the upsert logic assumes at most one row per pair. Databases
+  // created before this index existed may hold duplicates (the upsert's
+  // check-then-insert could race), which would make CREATE UNIQUE INDEX fail —
+  // keep the most recently inserted row per pair before creating it. The
+  // composite index's address prefix also covers address-only lookups, so the
+  // old single-column idx_subs_address is dropped.
+  const hasSubsPairIndex = db
+    .prepare(`SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_subs_address_lock'`)
+    .get()
+  if (!hasSubsPairIndex) {
+    db.transaction(() => {
+      db.exec(`
+        DELETE FROM notification_subscriptions
+        WHERE rowid NOT IN (
+          SELECT MAX(rowid) FROM notification_subscriptions GROUP BY address, lock_id
+        );
+        CREATE UNIQUE INDEX idx_subs_address_lock ON notification_subscriptions(address, lock_id);
+        DROP INDEX IF EXISTS idx_subs_address;
+      `)
+    })()
+  }
 
   // `released` was added after `locks` first shipped — back-fill it for
   // databases created before this column existed. Every already-indexed

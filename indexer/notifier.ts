@@ -16,8 +16,11 @@
  */
 
 import { createHmac } from 'node:crypto'
+import { request as httpRequest } from 'node:http'
+import { request as httpsRequest } from 'node:https'
 import { pathToFileURL } from 'node:url'
 import { db, initDb } from './db.js'
+import { safeLookup, validateWebhookUrl } from './ssrf.js'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,6 +63,7 @@ const EMAIL_FROM = process.env.EMAIL_FROM ?? 'StellarLock <notify@stellarlock.xy
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET ?? ''
 const NOTIFIER_INTERVAL_MS = Number(process.env.NOTIFIER_INTERVAL_MS ?? 3_600_000)
 const APP_BASE_URL = process.env.PUBLIC_APP_URL ?? 'https://app.stellarlock.xyz'
+const WEBHOOK_TIMEOUT_MS = 10_000
 
 const ONE_DAY_S = 86_400
 const SEVEN_DAYS_S = 7 * ONE_DAY_S
@@ -132,14 +136,56 @@ async function sendWebhookReminder(url: string, lock: LockRow, tier: ReminderTie
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (sig) headers['X-StellarLock-Signature'] = sig
 
+  // Re-validate at dispatch time: the URL was checked at subscribe time, but
+  // its DNS may have changed since (or the row predates the resolving check).
+  const urlErr = await validateWebhookUrl(url)
+  if (urlErr) {
+    console.error(`[notifier] webhook ${url} rejected: ${urlErr}`)
+    return
+  }
+
   try {
-    const res = await fetch(url, { method: 'POST', headers, body: payload })
-    if (!res.ok) {
-      console.error(`[notifier] webhook POST to ${url} failed: ${res.status}`)
+    const status = await postWebhook(url, headers, payload)
+    if (status >= 300 && status < 400) {
+      console.error(`[notifier] webhook POST to ${url} returned redirect ${status} — not followed`)
+    } else if (status < 200 || status >= 300) {
+      console.error(`[notifier] webhook POST to ${url} failed: ${status}`)
     }
   } catch (err) {
     console.error(`[notifier] webhook POST to ${url} threw:`, err)
   }
+}
+
+/**
+ * POST via node:http(s) rather than fetch so the connection goes through
+ * `safeLookup`: the address actually connected to is SSRF-checked (closing the
+ * DNS-rebinding window between validation and connect), and redirects are
+ * never followed, so a validated endpoint can't 3xx-pivot to an internal host.
+ * Resolves with the response status code.
+ */
+function postWebhook(url: string, headers: Record<string, string>, body: string): Promise<number> {
+  const parsed = new URL(url)
+  const request = parsed.protocol === 'https:' ? httpsRequest : httpRequest
+  return new Promise((resolve, reject) => {
+    const req = request(
+      parsed,
+      {
+        method: 'POST',
+        headers: { ...headers, 'Content-Length': Buffer.byteLength(body) },
+        lookup: safeLookup,
+        // Fresh connection per webhook: no pooled sockets to user-controlled hosts.
+        agent: false,
+        timeout: WEBHOOK_TIMEOUT_MS,
+      },
+      (res) => {
+        res.resume() // discard the body
+        resolve(res.statusCode ?? 0)
+      },
+    )
+    req.on('timeout', () => req.destroy(new Error(`timed out after ${WEBHOOK_TIMEOUT_MS}ms`)))
+    req.on('error', reject)
+    req.end(body)
+  })
 }
 
 // ---------------------------------------------------------------------------

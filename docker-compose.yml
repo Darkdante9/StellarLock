@@ -4,6 +4,8 @@
 # ────────
 #   frontend   Node 20 + pnpm + Vite dev server with hot-reload (port 5173)
 #   contracts  Rust + Soroban CLI for building and testing contracts
+#   indexer    Lock-event poller writing the SQLite index (profile: backend)
+#   notifier   Unlock-reminder cron worker, runs hourly (profile: backend)
 #
 # Quick start
 # ───────────
@@ -15,6 +17,10 @@
 #
 #   # Run Rust contract tests
 #   docker-compose run --rm contracts test
+#
+#   # Start the lock indexer + notification worker (need TOKEN_LOCKER_CONTRACT /
+#   # LP_LOCKER_CONTRACT, and RESEND_API_KEY / WEBHOOK_SECRET for delivery)
+#   docker-compose --profile backend up indexer notifier
 #
 # Environment
 # ───────────
@@ -83,6 +89,59 @@ services:
     #   docker-compose run --rm contracts "cd contracts && cargo test"
     command: ["cd contracts && stellar contract build"]
 
+  # ── Lock indexer (Soroban event poller) ───────────────────────────────────
+  indexer:
+    image: stellarlock-frontend-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: stellarlock-indexer
+    profiles:
+      - backend
+    command: ["pnpm", "indexer:start"]
+    volumes:
+      - .:/app
+      - /app/node_modules
+      # Shared with the notifier, which reads locks written here.
+      - indexer-data:/data
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.testnet
+        required: false
+    environment:
+      - LOCK_INDEX_DB_PATH=/data/lock-index.sqlite
+    networks:
+      - stellarlock-net
+    restart: unless-stopped
+
+  # ── Notification worker (email + webhook unlock reminders) ────────────────
+  # Runs runNotifier() every NOTIFIER_INTERVAL_MS (default 1h, see
+  # indexer/notifier.ts).
+  notifier:
+    image: stellarlock-frontend-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: stellarlock-notifier
+    profiles:
+      - backend
+    command: ["pnpm", "notifier:start"]
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - indexer-data:/data
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.testnet
+        required: false
+    environment:
+      - LOCK_INDEX_DB_PATH=/data/lock-index.sqlite
+    networks:
+      - stellarlock-net
+    restart: unless-stopped
+
 networks:
   stellarlock-net:
     driver: bridge
@@ -91,3 +150,5 @@ volumes:
   # Persistent cargo caches dramatically speed up subsequent builds.
   cargo-registry:
   cargo-build:
+  # SQLite lock index shared by the indexer and notifier.
+  indexer-data:
