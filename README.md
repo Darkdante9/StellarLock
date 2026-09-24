@@ -149,13 +149,21 @@ docker-compose run --rm contracts test
 
 This runs `cargo test` inside the contracts workspace with the full Rust + Soroban SDK environment.
 
+#### Run the indexer and notification worker
+
+```bash
+docker-compose --profile backend up indexer notifier
+```
+
+Both share a SQLite index on the `indexer-data` volume. See [Indexer & notification worker](#indexer--notification-worker) for the required environment variables.
+
 #### Docker files
 
 | File | Purpose |
 |---|---|
 | `Dockerfile.dev` | Frontend — Node 20 + pnpm, dependency layer caching |
 | `Dockerfile.contracts` | Contracts — Rust + Soroban CLI |
-| `docker-compose.yml` | Orchestrates both services |
+| `docker-compose.yml` | Orchestrates the frontend, contracts, indexer and notifier services |
 | `.dockerignore` | Excludes `node_modules`, `target`, build artifacts, and secrets |
 
 ### Build
@@ -163,6 +171,23 @@ This runs `cargo test` inside the contracts workspace with the full Rust + Sorob
 ```bash
 pnpm build:mainnet
 ```
+
+### Indexer & notification worker
+
+`/api/indexer-*` and the notification-subscription feature read a SQLite index that is kept up to date by two long-running Node processes. Run each one in its own terminal:
+
+```bash
+pnpm indexer:start    # polls Soroban contract events into the index (every INDEXER_POLL_INTERVAL_MS, default 10s)
+pnpm notifier:start   # sends 7d / 1d / at-unlock reminders (every NOTIFIER_INTERVAL_MS, default 1h)
+```
+
+| Variable | Used by | Purpose |
+|---|---|---|
+| `LOCK_INDEX_DB_PATH` | both, and `api/` | SQLite file path (default `lock-index.sqlite`). Must be the same file for every process. |
+| `SOROBAN_RPC_URL` | indexer | RPC endpoint (default testnet) |
+| `TOKEN_LOCKER_CONTRACT`, `LP_LOCKER_CONTRACT` | indexer | Contracts to index. At least one is required. |
+| `RESEND_API_KEY`, `EMAIL_FROM` | notifier | Email delivery. Emails are skipped if the key is unset. |
+| `WEBHOOK_SECRET` | notifier | HMAC key for the `X-StellarLock-Signature` header |
 
 ## Smart Contracts
 

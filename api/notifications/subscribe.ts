@@ -21,6 +21,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { db, initDb } from '../../indexer/db.js'
+import { validateWebhookUrl } from '../../indexer/ssrf.js'
 
 interface Req {
   method?: string
@@ -33,49 +34,7 @@ interface Res {
 
 const STELLAR_ADDRESS_RE = /^G[A-Z2-7]{55}$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-// Simple SSRF guard: reject private/loopback/metadata ranges
-function isPrivateOrReservedHostname(hostname: string): boolean {
-  // IPv6 loopback
-  if (hostname === '::1' || hostname === '[::1]') return true
-
-  // Plain IPv4 or IPv4-mapped IPv6 (strip brackets if present)
-  const addr = hostname.startsWith('[') && hostname.endsWith(']')
-    ? hostname.slice(1, -1)
-    : hostname
-
-  // localhost
-  if (addr === 'localhost') return true
-
-  // 127.0.0.0/8
-  if (/^127\./.test(addr)) return true
-
-  // 10.0.0.0/8
-  if (/^10\./.test(addr)) return true
-
-  // 172.16.0.0/12
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(addr)) return true
-
-  // 192.168.0.0/16
-  if (/^192\.168\./.test(addr)) return true
-
-  // Cloud instance metadata endpoint
-  if (addr === '169.254.169.254') return true
-
-  return false
-}
-
-function validateWebhookUrl(url: string): string | null {
-  try {
-    const parsed = new URL(url)
-    if (!['http:', 'https:'].includes(parsed.protocol)) return 'webhookUrl must use http or https'
-    if (isPrivateOrReservedHostname(parsed.hostname)) return 'webhookUrl must not point to a private network address'
-    return null
-  } catch {
-    return 'webhookUrl is not a valid URL'
-  }
-}
-
-export default function handler(req: Req, res: Res) {
+export default async function handler(req: Req, res: Res) {
   if (req.method !== 'POST') {
     return res.status(405).end()
   }
@@ -103,7 +62,8 @@ export default function handler(req: Req, res: Res) {
     if (typeof webhookUrl !== 'string') {
       return res.status(400).json({ error: 'webhookUrl must be a string' })
     }
-    const urlErr = validateWebhookUrl(webhookUrl)
+    // Resolves the hostname and rejects it if any address is private/reserved.
+    const urlErr = await validateWebhookUrl(webhookUrl)
     if (urlErr) return res.status(400).json({ error: urlErr })
   }
   if (email === undefined && webhookUrl === undefined) {
