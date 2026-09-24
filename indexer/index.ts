@@ -257,21 +257,29 @@ export function processEvent(event: ContractEvent): void {
         break
       }
       case "lp_lock_withdrawn": {
-        const [id] = event.data as unknown[]
+        // Contract emits topics=(symbol, id), data=(beneficiary, pool_share, releasable) —
+        // a vesting LP lock can emit several of these (one per partial
+        // claim), so cumulative tracking via applyRelease is required.
+        const [, id] = event.topics
+        const [, , releasable] = event.data as unknown[]
         const lockId = `lp:${String(id)}`
         if (!s.insertEvent.run(event.id, event.ledger, name, lockId).changes) return
-        s.markWithdrawn.run(lockId)
+        applyRelease(s, lockId, BigInt(releasable as bigint))
         break
       }
       case "lp_lock_extended": {
-        const [id, , , newUnlockAt] = event.data as unknown[]
+        // Contract emits topics=(symbol, id), data=(creator, old_unlock_at, new_unlock_at).
+        const [, id] = event.topics
+        const [, , newUnlockAt] = event.data as unknown[]
         const lockId = `lp:${String(id)}`
         if (!s.insertEvent.run(event.id, event.ledger, name, lockId).changes) return
         s.extendUnlock.run(Number(newUnlockAt), lockId)
         break
       }
       case "lp_beneficiary_transferred": {
-        const [id, , newBeneficiary] = event.data as unknown[]
+        // Contract emits topics=(symbol, id), data=(old_beneficiary, new_beneficiary).
+        const [, id] = event.topics
+        const [, newBeneficiary] = event.data as unknown[]
         const lockId = `lp:${String(id)}`
         if (!s.insertEvent.run(event.id, event.ledger, name, lockId).changes) return
         s.setBeneficiary.run(String(newBeneficiary), lockId)

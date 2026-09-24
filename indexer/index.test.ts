@@ -105,17 +105,19 @@ const lockWithdrawn = makeEvent("evt-3", 110, [
   addr(tokenAddr),
   i128(500n),
 ])
+// lp-locker withdraw/extend/transfer_beneficiary publish topics=(symbol, id)
+// with the rest of the payload in the data tuple — id is NOT part of data.
 const lpLockExtended = makeEvent(
   "evt-4",
   111,
-  [sym("lp_lock_extended")],
-  nativeToScVal([u64(1n), addr(creator), u64(BigInt(lpUnlockAt)), u64(BigInt(extendedUnlockAt))]),
+  [sym("lp_lock_extended"), u64(1n)],
+  nativeToScVal([addr(creator), u64(BigInt(lpUnlockAt)), u64(BigInt(extendedUnlockAt))]),
 )
 const lpBeneficiaryTransferred = makeEvent(
   "evt-5",
   112,
-  [sym("lp_beneficiary_transferred")],
-  nativeToScVal([u64(1n), addr(beneficiary), addr(newBeneficiary)]),
+  [sym("lp_beneficiary_transferred"), u64(1n)],
+  nativeToScVal([addr(beneficiary), addr(newBeneficiary)]),
 )
 
 beforeAll(async () => {
