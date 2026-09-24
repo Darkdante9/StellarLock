@@ -703,6 +703,27 @@ impl LpLocker {
                 false,
             );
             lock_ids.push_back(lock_id);
+
+            // Each split-group child is a fully independent LpLock (its own
+            // id, later withdrawable/extendable/transferable via the standard
+            // entry points), so it gets its own `lp_lock_created` event with
+            // its own beneficiary/amount, exactly like `create_lock` and
+            // mirroring the token-locker's per-child `lock_created` events.
+            // This lets the indexer track every child individually instead of
+            // dropping them entirely (the group-level `lp_split_lock_created`
+            // event below has no per-lock handler).
+            env.events().publish(
+                (
+                    Symbol::new(&env, "lp_lock_created"),
+                    lock_id,
+                    creator.clone(),
+                    pool_share.clone(),
+                    share_amount,
+                    beneficiary.clone(),
+                    unlock_at,
+                ),
+                (dex.clone(), token_a.clone(), token_b.clone()),
+            );
         }
 
         // Persist the split group record.

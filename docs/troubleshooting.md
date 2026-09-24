@@ -214,11 +214,11 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ### RateLimitExceeded
 
-**Cause:** Your account has submitted too many contract invocations within a short window. The contract enforces a per-account rate limit to protect the network from spam.
+**Cause:** Your account called `create_lock` or `create_split_lock` again within `RATE_LIMIT_COOLDOWN` (60 seconds) of its last call. The contract enforces this per-creator cooldown to protect against spam. See [ADR-010](./adr/ADR-010-rate-limit-via-temporary-storage.md) for the design behind it.
 
 **Fix:**
-1. Wait a few minutes before retrying.
-2. If you are running automated scripts or tests, add a delay between calls.
+1. Wait about 60 seconds before retrying (not "a few minutes" — the cooldown is exactly `RATE_LIMIT_COOLDOWN`, defined in `contracts/locker-common/src/lib.rs`).
+2. If you are running automated scripts or tests, add a 60-second delay between calls from the same account.
 3. On Mainnet, if you legitimately need a higher throughput, contact the StellarLock team to discuss options.
 
 ---

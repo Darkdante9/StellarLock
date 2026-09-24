@@ -105,17 +105,19 @@ const lockWithdrawn = makeEvent("evt-3", 110, [
   addr(tokenAddr),
   i128(500n),
 ])
+// lp-locker withdraw/extend/transfer_beneficiary publish topics=(symbol, id)
+// with the rest of the payload in the data tuple — id is NOT part of data.
 const lpLockExtended = makeEvent(
   "evt-4",
   111,
-  [sym("lp_lock_extended")],
-  nativeToScVal([u64(1n), addr(creator), u64(BigInt(lpUnlockAt)), u64(BigInt(extendedUnlockAt))]),
+  [sym("lp_lock_extended"), u64(1n)],
+  nativeToScVal([addr(creator), u64(BigInt(lpUnlockAt)), u64(BigInt(extendedUnlockAt))]),
 )
 const lpBeneficiaryTransferred = makeEvent(
   "evt-5",
   112,
-  [sym("lp_beneficiary_transferred")],
-  nativeToScVal([u64(1n), addr(beneficiary), addr(newBeneficiary)]),
+  [sym("lp_beneficiary_transferred"), u64(1n)],
+  nativeToScVal([addr(beneficiary), addr(newBeneficiary)]),
 )
 
 beforeAll(async () => {
@@ -363,6 +365,51 @@ describe("lock indexer", () => {
 
     await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 420, events: [secondClaim] }]))
     ;[lock] = fresh.getLocksForToken(vestToken)
+    expect(lock.status).toBe("withdrawn")
+    expect(lock.withdrawn).toBe(true)
+    expect(lock.released).toBe(1_000n)
+  })
+
+  it("does not mark a vesting LP lock fully withdrawn until cumulative releases reach its full amount (#819)", async () => {
+    const fresh = await freshIndexer("lp-partial-vesting")
+
+    const vestBeneficiary = Keypair.random().publicKey()
+    const vestPoolShare = Keypair.random().publicKey()
+    const vestDex = Keypair.random().publicKey()
+    const vestUnlockAt = now + 86_400
+
+    const created = makeEvent(
+      "lp-vest-created",
+      501,
+      [sym("lp_lock_created"), u64(99n), addr(creator), addr(vestPoolShare), i128(1_000n), addr(vestBeneficiary), u64(BigInt(vestUnlockAt))],
+      nativeToScVal([sym("Aquarius"), addr(vestDex), addr(vestDex)]),
+    )
+    // lp_lock_withdrawn publishes topics=(symbol, id), data=(beneficiary, pool_share, releasable) —
+    // two partial claims from the same vesting schedule, each carrying only
+    // the amount released in that particular withdrawal, not the total.
+    const firstClaim = makeEvent(
+      "lp-vest-claim-1",
+      510,
+      [sym("lp_lock_withdrawn"), u64(99n)],
+      nativeToScVal([addr(vestBeneficiary), addr(vestPoolShare), i128(400n)]),
+    )
+    const secondClaim = makeEvent(
+      "lp-vest-claim-2",
+      520,
+      [sym("lp_lock_withdrawn"), u64(99n)],
+      nativeToScVal([addr(vestBeneficiary), addr(vestPoolShare), i128(600n)]),
+    )
+
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 501, events: [created] }]))
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 510, events: [firstClaim] }]))
+
+    let [lock] = fresh.getLocksForToken(vestPoolShare)
+    expect(lock.status).toBe("locked")
+    expect(lock.withdrawn).toBe(false)
+    expect(lock.released).toBe(400n)
+
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 520, events: [secondClaim] }]))
+    ;[lock] = fresh.getLocksForToken(vestPoolShare)
     expect(lock.status).toBe("withdrawn")
     expect(lock.withdrawn).toBe(true)
     expect(lock.released).toBe(1_000n)
