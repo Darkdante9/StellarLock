@@ -20,10 +20,9 @@ export class MyLocksPage {
   }
 
   async filterByType(type: string) {
-    const selects = await this.page.locator("select").all()
-    if (selects.length > 1) {
-      await selects[1].selectOption(type)
-    }
+    // Use nth(1) so Playwright auto-waits for the second dropdown; if it's
+    // absent the assertion fails loudly rather than silently no-oping.
+    await this.page.locator("select").nth(1).selectOption(type)
   }
 
   async getLockCards() {
@@ -46,8 +45,8 @@ export class MyLocksPage {
     return await this.page.locator("text=/no locks/i").textContent()
   }
 
-  async isLoading() {
-    return await this.page.locator('[class*="SkeletonLockCard"]').isVisible()
+  skeletonLockCard() {
+    return this.page.locator('[class*="SkeletonLockCard"]').first()
   }
 
   async waitForSkeletonsToLoad() {
