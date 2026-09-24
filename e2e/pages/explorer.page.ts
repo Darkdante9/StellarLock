@@ -3,17 +3,10 @@ import { Page } from "@playwright/test"
 export class ExplorerPage {
   constructor(public page: Page) {}
 
-  async goto(tokenAddress?: string) {
-    if (tokenAddress) {
-      await this.page.goto(`/explore/${tokenAddress}`)
-    } else {
-      await this.page.goto("/explore")
-    }
-  }
-
-  async searchToken(address: string) {
-    await this.page.fill('input[placeholder*="token"]', address)
-    await this.page.keyboard.press("Enter")
+  // Explorer is only mounted at /explore/:token — bare /explore is Discover
+  // (see DiscoverPage).
+  async goto(tokenAddress: string) {
+    await this.page.goto(`/explore/${tokenAddress}`)
   }
 
   async waitForTokenHeader() {
@@ -27,6 +20,10 @@ export class ExplorerPage {
   async getLockCount() {
     const cards = await this.page.locator('[class*="LockCard"]').count()
     return cards
+  }
+
+  notFoundHeading() {
+    return this.page.getByRole("heading", { level: 1, name: "No locks found" })
   }
 
   loadingSkeleton() {
