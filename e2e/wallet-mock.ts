@@ -24,8 +24,9 @@ const FREIGHTER_ID = "freighter"
  * `type` naming the request, and `messageId`/`messagedId` correlating the
  * pair — see node_modules/@stellar/freighter-api/build/index.min.js). This
  * installs a page-level listener that answers just enough of that protocol
- * (connection status, address, network) to satisfy the session-restore
- * check, and must run before the app's own scripts via addInitScript.
+ * (connection status, address, network, transaction signing) to satisfy the
+ * session-restore check and let a test submit transactions, and must run
+ * before the app's own scripts via addInitScript.
  */
 export async function mockConnectedWallet(page: Page, address = MOCK_WALLET_ADDRESS) {
   await page.addInitScript(
@@ -39,7 +40,8 @@ export async function mockConnectedWallet(page: Page, address = MOCK_WALLET_ADDR
 
       window.addEventListener("message", (event: MessageEvent) => {
         if (event.source !== window) return
-        const data = event.data as { source?: string; type?: string; messageId?: number } | undefined
+        const data = event.data as
+          { source?: string; type?: string; messageId?: number; transactionXdr?: string } | undefined
         if (!data || data.source !== "FREIGHTER_EXTERNAL_MSG_REQUEST") return
 
         const respond = (extra: Record<string, unknown>) =>
@@ -62,6 +64,11 @@ export async function mockConnectedWallet(page: Page, address = MOCK_WALLET_ADDR
           case "REQUEST_NETWORK":
           case "REQUEST_NETWORK_DETAILS":
             respond({ network: "TESTNET", networkPassphrase: "Test SDF Network ; September 2015" })
+            break
+          case "SUBMIT_TRANSACTION":
+            // Hands the transaction back unchanged as the "signed" one — only
+            // meaningful alongside mockSorobanRpc, which doesn't check signatures.
+            respond({ signedTransaction: data.transactionXdr, signerAddress: address })
             break
           default:
             respond({})

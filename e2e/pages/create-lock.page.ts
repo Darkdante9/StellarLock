@@ -12,7 +12,7 @@ export class CreateLockPage {
   }
 
   async fillAmount(amount: string) {
-    await this.page.fill('input[placeholder*="amount"]', amount)
+    await this.page.fill("#amount", amount)
   }
 
   async setUnlockDate(date: string) {
@@ -37,6 +37,11 @@ export class CreateLockPage {
 
   async submitForm() {
     await this.page.click('button[type="submit"]')
+  }
+
+  /** Approves the review dialog that submitForm() opens, sending the transaction. */
+  async confirmLock() {
+    await this.page.getByRole("dialog").getByRole("button", { name: "Confirm & Lock" }).click()
   }
 
   async getErrorMessage() {
