@@ -9,6 +9,7 @@
 
 import { useEffect } from "react"
 import { useLocation, useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { CheckCircle2, Copy, ExternalLink, ArrowRight, PlusCircle } from "lucide-react"
 import { Helmet } from "react-helmet-async"
 import { toast } from "react-hot-toast"
@@ -49,6 +50,7 @@ export interface LockCreatedState {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function LockCreated() {
+  const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -74,15 +76,15 @@ export function LockCreated() {
 
   function copyToClipboard(text: string, label: string) {
     void navigator.clipboard.writeText(text).then(() => {
-      toast.success(`${label} copied!`)
+      toast.success(t("lockCreated.copied", { label }))
     })
   }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <Helmet>
-        <title>Lock Created | StellarLock</title>
-        <meta name="description" content="Your lock has been created successfully on Stellar." />
+        <title>{t("lockCreated.title")}</title>
+        <meta name="description" content={t("lockCreated.description")} />
       </Helmet>
 
       {/* Success header */}
@@ -90,26 +92,26 @@ export function LockCreated() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15">
           <CheckCircle2 className="h-9 w-9 text-emerald-500" aria-hidden="true" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">Lock Created!</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("lockCreated.heading")}</h1>
         <p className="text-sm text-muted-foreground">
-          Your tokens are now locked on-chain.{" "}
-          {vesting && <span>A vesting schedule is active.</span>}
+          {t("lockCreated.subheading")}{" "}
+          {vesting && <span>{t("lockCreated.vestingActive")}</span>}
         </p>
       </div>
 
       {/* Lock summary card */}
       <Card className="mb-4 divide-y divide-border overflow-hidden p-0">
         <div className="bg-secondary/40 px-5 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lock Summary</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("lockCreated.lockSummary")}</p>
         </div>
 
-        <DetailRow label="Lock ID">
+        <DetailRow label={t("lockCreated.lockId")}>
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm">{lockId}</span>
             <button
               type="button"
-              aria-label="Copy lock ID"
-              onClick={() => copyToClipboard(lockId, "Lock ID")}
+              aria-label={t("lockCreated.copyLockId")}
+              onClick={() => copyToClipboard(lockId, t("lockCreated.lockId"))}
               className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -117,13 +119,13 @@ export function LockCreated() {
           </div>
         </DetailRow>
 
-        <DetailRow label="Type">
+        <DetailRow label={t("lockCreated.type")}>
           <Badge variant={lockKind === "lp" ? "default" : "primary"}>
-            {lockKind === "lp" ? "LP Lock" : "Token Lock"}
+            {lockKind === "lp" ? t("lockCreated.lpLock") : t("lockCreated.tokenLock")}
           </Badge>
         </DetailRow>
 
-        <DetailRow label="Token">
+        <DetailRow label={t("lockCreated.token")}>
           <span className="font-mono text-sm">
             {tokenSymbol ? (
               <span>
@@ -136,38 +138,38 @@ export function LockCreated() {
           </span>
         </DetailRow>
 
-        <DetailRow label="Amount">
+        <DetailRow label={t("lockCreated.amount")}>
           <span className="font-semibold tabular-nums">
             {amount} {tokenSymbol ?? ""}
           </span>
         </DetailRow>
 
-        <DetailRow label="Beneficiary">
+        <DetailRow label={t("lockCreated.beneficiary")}>
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm">{shortAddress(beneficiary)}</span>
             <CopyButton text={beneficiary} className="ml-1" />
           </div>
         </DetailRow>
 
-        <DetailRow label="Creator">
+        <DetailRow label={t("lockCreated.creator")}>
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm">{shortAddress(creator)}</span>
             <CopyButton text={creator} className="ml-1" />
           </div>
         </DetailRow>
 
-        <DetailRow label="Unlock date">
+        <DetailRow label={t("lockCreated.unlockDate")}>
           <span className="text-sm">{formatDate(unlockAt)}</span>
         </DetailRow>
 
         {vesting && (
-          <DetailRow label="Vesting">
-            <Badge variant="outline">Linear vesting enabled</Badge>
+          <DetailRow label={t("lockCreated.vesting")}>
+            <Badge variant="outline">{t("lockCreated.vestingEnabled")}</Badge>
           </DetailRow>
         )}
 
         {timestamp && (
-          <DetailRow label="Created at">
+          <DetailRow label={t("lockCreated.createdAt")}>
             <span className="text-sm">{formatDateTime(timestamp)}</span>
           </DetailRow>
         )}
@@ -176,16 +178,16 @@ export function LockCreated() {
       {/* Transaction details card */}
       <Card className="mb-6 divide-y divide-border overflow-hidden p-0">
         <div className="bg-secondary/40 px-5 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Transaction Details</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("lockCreated.transactionDetails")}</p>
         </div>
 
-        <DetailRow label="TX Hash">
+        <DetailRow label={t("lockCreated.txHash")}>
           <div className="flex items-center gap-2">
             <span className="max-w-[200px] truncate font-mono text-xs">{txHash}</span>
             <button
               type="button"
-              aria-label="Copy transaction hash"
-              onClick={() => copyToClipboard(txHash, "Transaction hash")}
+              aria-label={t("lockCreated.copyTxHash")}
+              onClick={() => copyToClipboard(txHash, t("lockCreated.txHash"))}
               className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -194,7 +196,7 @@ export function LockCreated() {
               href={stellarExpertUrl}
               target="_blank"
               rel="noreferrer"
-              aria-label="View transaction on Stellar Expert"
+              aria-label={t("lockCreated.viewTxStellarExpert")}
               className="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -202,19 +204,19 @@ export function LockCreated() {
           </div>
         </DetailRow>
 
-        <DetailRow label="Network">
+        <DetailRow label={t("lockCreated.network")}>
           <Badge variant="outline">{NETWORK.displayName}</Badge>
         </DetailRow>
       </Card>
 
       {/* Share */}
       <Card className="mb-6 p-4">
-        <p className="mb-2 text-sm font-medium">Share this lock</p>
+        <p className="mb-2 text-sm font-medium">{t("lockCreated.shareTitle")}</p>
         <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 font-mono text-xs text-muted-foreground">
           <span className="flex-1 truncate">{shareUrl}</span>
           <button
             type="button"
-            aria-label="Copy shareable link"
+            aria-label={t("lockCreated.copyShareLink")}
             onClick={() => copyToClipboard(shareUrl, "Link")}
             className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -227,12 +229,12 @@ export function LockCreated() {
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link to={lockPath} className={buttonVariants({ size: "lg", className: "flex-1" })}>
           <ArrowRight className="h-4 w-4" />
-          View Lock Detail
+          {t("lockCreated.viewLockDetail")}
         </Link>
 
         <Link to="/app/create" className={buttonVariants({ variant: "outline", size: "lg", className: "flex-1" })}>
           <PlusCircle className="h-4 w-4" />
-          Create Another
+          {t("lockCreated.createAnother")}
         </Link>
       </div>
     </div>
