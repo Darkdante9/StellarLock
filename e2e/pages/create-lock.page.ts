@@ -44,10 +44,6 @@ export class CreateLockPage {
     await this.page.getByRole("dialog").getByRole("button", { name: "Confirm & Lock" }).click()
   }
 
-  async getErrorMessage() {
-    return await this.page.locator('[role="alert"]').textContent()
-  }
-
   submitButton() {
     return this.page.locator('button[type="submit"]')
   }

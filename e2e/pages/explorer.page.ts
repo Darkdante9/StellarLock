@@ -9,21 +9,26 @@ export class ExplorerPage {
     await this.page.goto(`/explore/${tokenAddress}`)
   }
 
+  /** The page's main h1 — use with expect().toBeVisible() / toHaveText(). */
+  tokenHeading() {
+    return this.page.locator("h1").first()
+  }
+
+  /** @deprecated Use tokenHeading() with expect() instead. */
   async waitForTokenHeader() {
-    await this.page.locator("h1").first().waitFor()
+    await this.tokenHeading().waitFor()
   }
 
-  async getTokenName() {
-    return await this.page.locator("h1").first().textContent()
-  }
-
-  async getLockCount() {
-    const cards = await this.page.locator('[class*="LockCard"]').count()
-    return cards
+  lockList() {
+    return this.page.locator('[class*="LockCard"]')
   }
 
   notFoundHeading() {
     return this.page.getByRole("heading", { level: 1, name: "No locks found" })
+  }
+
+  emptyOrNotFound() {
+    return this.page.locator("text=/not found|no locks/i").first()
   }
 
   loadingSkeleton() {
