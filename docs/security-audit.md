@@ -31,11 +31,28 @@
 
 ### 3. Authorization Model (`require_auth`)
 
+Both `TokenLocker` and `LpLocker` expose the same set of gated entry points. All 13 call sites are listed below, grouped by the signer required.
+
+#### User-gated (lock-level)
+
 - [x] **`create_lock`**: `creator.require_auth()` — ensures the funder authorized the token transfer
-- [x] **`withdraw`**: `lock.beneficiary.require_auth()` — only the beneficiary can withdraw
-- [x] **`extend`**: `lock.creator.require_auth()` — only the creator can extend
-- [x] **`transfer_beneficiary`**: `lock.beneficiary.require_auth()` — only the current beneficiary can transfer the role
-- [x] All write operations require authentication from the appropriate party
+- [x] **`create_split_lock`**: `creator.require_auth()` — same guarantee for split/multi-beneficiary locks
+- [x] **`withdraw`**: `lock.beneficiary.require_auth()` — only the designated beneficiary can withdraw
+- [x] **`extend`**: `lock.creator.require_auth()` — only the original creator can extend the unlock date
+- [x] **`transfer_beneficiary`**: `lock.beneficiary.require_auth()` — only the current beneficiary can reassign the role
+
+#### Admin-gated (contract-level)
+
+- [x] **`init`**: `admin.require_auth()` — prevents anyone other than the supplied admin from initialising the contract
+- [x] **`propose_admin`**: `admin.require_auth()` — only the current admin can nominate a successor
+- [x] **`accept_admin`**: `pending.require_auth()` — the incoming admin must sign to complete the two-step handover
+- [x] **`propose_upgrade`**: `admin.require_auth()` — only admin can submit a new WASM hash for the time-locked upgrade queue
+- [x] **`execute_upgrade`**: `admin.require_auth()` — only admin can apply a queued upgrade after the delay period
+- [x] **`cancel_upgrade`**: `admin.require_auth()` — only admin can abort a pending upgrade
+- [x] **`pause`**: `admin.require_auth()` — only admin can halt user-facing operations
+- [x] **`unpause`**: `admin.require_auth()` — only admin can resume operations
+
+> **Note**: The admin-gated functions are the highest-privilege operations in the system. A compromised or malicious admin could pause the contract indefinitely, push a malicious upgrade, or reassign themselves out of admin to a fresh address. The two-step admin transfer and the upgrade time-lock mitigate these risks but do not eliminate them entirely. Both should be covered in any third-party audit.
 
 ### 4. Storage TTL Expiry Risks
 
