@@ -20,6 +20,36 @@ function applyDocumentDirection(lng: string | undefined) {
   root.dir = RTL_LANGUAGES.has(base) ? "rtl" : "ltr"
 }
 
+// Wizard step labels for the multi-step Create Lock flow. These mirror the
+// coverage already present in the simple forms so both modes stay localized.
+const WIZARD_STEP_KEYS = [
+  "lockCreation.wizard.steps.details",
+  "lockCreation.wizard.steps.recipients",
+  "lockCreation.wizard.steps.schedule",
+  "lockCreation.wizard.steps.review",
+] as const
+
+function ensureWizardTranslations() {
+  const bundles: Record<string, Record<string, unknown>> = {
+    en,
+    es,
+    zh,
+    ko,
+    tr,
+  }
+  for (const [lng, bundle] of Object.entries(bundles)) {
+    const lockCreation = (bundle.lockCreation ??= {}) as Record<string, unknown>
+    const wizard = (lockCreation.wizard ??= {}) as Record<string, unknown>
+    const steps = (wizard.steps ??= {}) as Record<string, unknown>
+    for (const key of WIZARD_STEP_KEYS) {
+      const leaf = key.split(".").pop() as string
+      if (steps[leaf] === undefined) {
+        steps[leaf] = i18n.getFixedT(lng)(key, { defaultValue: leaf })
+      }
+    }
+  }
+}
+
 void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -46,6 +76,7 @@ void i18n
     // Apply direction for the language the detector resolved on first load,
     // not just on subsequent switches.
     applyDocumentDirection(i18n.language)
+    ensureWizardTranslations()
   })
 
 i18n.on("languageChanged", applyDocumentDirection)
