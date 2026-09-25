@@ -36,6 +36,12 @@ Both `TokenLocker` and `LpLocker` expose the same set of gated entry points. All
 #### User-gated (lock-level)
 
 - [x] **`create_lock`**: `creator.require_auth()` — ensures the funder authorized the token transfer
+- [x] **`withdraw`**: `lock.beneficiary.require_auth()` — only the beneficiary can withdraw
+- [x] **`extend`**: `lock.creator.require_auth()` — only the creator can extend
+- [x] **`transfer_beneficiary`**: `lock.beneficiary.require_auth()` — only the current beneficiary can transfer the role
+- [x] **Admin management**: `get_admin()` is read-only; `propose_admin()` requires the current admin; `accept_admin()` requires the nominated pending admin
+- [x] **Emergency controls**: `pause()` and `unpause()` require the current admin; a pause blocks non-admin lock lifecycle writes but does not block reads or admin/governance calls
+- [x] All write operations require authentication from the appropriate party
 - [x] **`create_split_lock`**: `creator.require_auth()` — same guarantee for split/multi-beneficiary locks
 - [x] **`withdraw`**: `lock.beneficiary.require_auth()` — only the designated beneficiary can withdraw
 - [x] **`extend`**: `lock.creator.require_auth()` — only the original creator can extend the unlock date
@@ -93,6 +99,7 @@ Both `TokenLocker` and `LpLocker` expose the same set of gated entry points. All
 2. **No partial lock creation**: Users must lock the full specified amount in one transaction. Cannot add to an existing lock.
 3. **LP locker has no vesting**: Linear vesting is only available on token locks, not LP locks.
 4. **No on-chain metadata**: Token names/symbols are derived client-side. The contracts only store addresses.
+5. **Admin pause is an availability control**: A current admin can halt non-admin writes on each contract with `pause()`, but users cannot create, withdraw, extend, or transfer locks while paused. Reads and admin/governance calls remain available, and a pending upgrade can still execute after its timelock; an unsafe upgrade must be cancelled separately.
 
 ## Pre-Mainnet Checklist
 
