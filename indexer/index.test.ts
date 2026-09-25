@@ -432,6 +432,51 @@ describe("lock indexer", () => {
     expect(lock.released).toBe(1_000n)
   })
 
+  it("does not mark a vesting LP lock fully withdrawn until cumulative releases reach its full amount (#819)", async () => {
+    const fresh = await freshIndexer("lp-partial-vesting")
+
+    const vestBeneficiary = Keypair.random().publicKey()
+    const vestPoolShare = Keypair.random().publicKey()
+    const vestDex = Keypair.random().publicKey()
+    const vestUnlockAt = now + 86_400
+
+    const created = makeEvent(
+      "lp-vest-created",
+      501,
+      [sym("lp_lock_created"), u64(99n), addr(creator), addr(vestPoolShare), i128(1_000n), addr(vestBeneficiary), u64(BigInt(vestUnlockAt))],
+      nativeToScVal([sym("Aquarius"), addr(vestDex), addr(vestDex)]),
+    )
+    // lp_lock_withdrawn publishes topics=(symbol, id), data=(beneficiary, pool_share, releasable) —
+    // two partial claims from the same vesting schedule, each carrying only
+    // the amount released in that particular withdrawal, not the total.
+    const firstClaim = makeEvent(
+      "lp-vest-claim-1",
+      510,
+      [sym("lp_lock_withdrawn"), u64(99n)],
+      nativeToScVal([addr(vestBeneficiary), addr(vestPoolShare), i128(400n)]),
+    )
+    const secondClaim = makeEvent(
+      "lp-vest-claim-2",
+      520,
+      [sym("lp_lock_withdrawn"), u64(99n)],
+      nativeToScVal([addr(vestBeneficiary), addr(vestPoolShare), i128(600n)]),
+    )
+
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 501, events: [created] }]))
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 510, events: [firstClaim] }]))
+
+    let [lock] = fresh.getLocksForToken(vestPoolShare)
+    expect(lock.status).toBe("locked")
+    expect(lock.withdrawn).toBe(false)
+    expect(lock.released).toBe(400n)
+
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 520, events: [secondClaim] }]))
+    ;[lock] = fresh.getLocksForToken(vestPoolShare)
+    expect(lock.status).toBe("withdrawn")
+    expect(lock.withdrawn).toBe(true)
+    expect(lock.released).toBe(1_000n)
+  })
+
   it("indexes each split-lock child individually, so one beneficiary's withdrawal only updates their own row (#630)", async () => {
     const fresh = await freshIndexer("split-lock-children")
 
