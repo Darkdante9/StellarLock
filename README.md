@@ -313,3 +313,8 @@ Found a security vulnerability? Please read our [Security Policy](SECURITY.md) b
 ## License
 
 MIT
+
+## Handsoff notes
+
+<!-- handsoff-issue-778 -->
+- #778: Lock-creation 'Lock Details' metadata section ignores its own i18n keys in both forms
