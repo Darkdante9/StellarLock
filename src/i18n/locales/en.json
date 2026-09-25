@@ -447,6 +447,21 @@
       "title": "Identical Tokens",
       "message": "Token A and Token B must be different addresses.",
       "recovery": "Choose two distinct token addresses for your LP pair."
+    },
+    "notInitialized": {
+      "title": "Contract Not Initialized",
+      "message": "The contract has not been initialized with an administrator yet.",
+      "recovery": "Contact the contract operator to initialize the deployment."
+    },
+    "lockNotFound": {
+      "title": "Lock Not Found",
+      "message": "No lock record was found matching this lock ID.",
+      "recovery": "Verify the lock ID and contract address and try again."
+    },
+    "contractPaused": {
+      "title": "Contract Paused",
+      "message": "The contract is currently paused by the administrator for maintenance or emergency.",
+      "recovery": "Please try again later once operations have been resumed."
     }
   },
   "analytics": {

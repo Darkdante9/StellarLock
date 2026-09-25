@@ -160,6 +160,27 @@ const CONTRACT_ERRORS: Record<string, Omit<StructuredError, "code">> = {
     link: null,
     i18nKey: "errors.identicalTokens",
   },
+  NotInitialized: {
+    title: "errors.notInitialized.title",
+    message: "errors.notInitialized.message",
+    recovery: "errors.notInitialized.recovery",
+    link: null,
+    i18nKey: "errors.notInitialized",
+  },
+  LockNotFound: {
+    title: "errors.lockNotFound.title",
+    message: "errors.lockNotFound.message",
+    recovery: "errors.lockNotFound.recovery",
+    link: null,
+    i18nKey: "errors.lockNotFound",
+  },
+  ContractPaused: {
+    title: "errors.contractPaused.title",
+    message: "errors.contractPaused.message",
+    recovery: "errors.contractPaused.recovery",
+    link: null,
+    i18nKey: "errors.contractPaused",
+  },
 }
 
 // Map wallet/network errors

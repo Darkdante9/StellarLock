@@ -34,6 +34,9 @@ Every entry maps directly to an error case defined in `src/lib/errors.ts`.
   - [NotPendingAdmin](#notpendingadmin)
   - [ReentrancyDetected](#reentrancydetected)
   - [IdenticalTokens](#identicaltokens)
+  - [NotInitialized](#notinitialized)
+  - [LockNotFound](#locknotfound)
+  - [ContractPaused](#contractpaused)
 - [Connection issues](#connection-issues)
   - [Freighter not detected](#freighter-not-detected)
   - [Wallet disconnected mid-session](#wallet-disconnected-mid-session)
@@ -270,6 +273,30 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 **Cause:** You tried to create an LP (liquidity-pair) lock where both token addresses in the pair are the same. The LP locker contract requires two distinct tokens.
 
 **Fix:** Select two different token addresses for the liquidity pair. If you want to lock a single token, use the standard token locker instead.
+
+---
+
+### NotInitialized
+
+**Cause:** The contract deployment has not been initialized with an admin address yet, or an admin-only operation was invoked on an uninitialized contract instance.
+
+**Fix:** If you are the contract deployer, call the `init(admin)` entry point once after deploying the contract. If you are an end user, the contract operator has not finalized the deployment — contact the contract operator or team.
+
+---
+
+### LockNotFound
+
+**Cause:** The requested lock ID does not exist in the contract's storage. This can happen if an invalid ID was entered into the URL or explorer, or if the lock was created on a different contract deployment/network.
+
+**Fix:** Double-check the lock ID and contract address. Confirm that you are connected to the correct network (Testnet vs. Mainnet).
+
+---
+
+### ContractPaused
+
+**Cause:** The contract is currently paused by the administrator using the emergency circuit breaker mechanism (`pause()`). All lock creations, withdrawals, extensions, and beneficiary transfers are temporarily halted.
+
+**Fix:** Wait for the contract administrator to resolve the maintenance/incident and call `unpause()`. Read queries remain operational during a pause. Check team communication channels or status updates for more details.
 
 ---
 
