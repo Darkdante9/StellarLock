@@ -12,7 +12,7 @@ export class LockDetailPage {
   }
 
   async getLockId() {
-    return await this.page.locator("text=/Lock #\d+/").textContent()
+    return await this.page.getByText(/Lock #\d+/).textContent()
   }
 
   async getUnlockDate() {
@@ -50,5 +50,19 @@ export class LockDetailPage {
 
   loadingSkeleton() {
     return this.page.locator('[class*="animate-pulse"]').first()
+  }
+
+  /**
+   * Returns the text content of the status badge shown in the card header
+   * ("Locked", "Unlockable", or "Withdrawn").
+   */
+  async getStatus() {
+    // The StatusBadge sits inside the top-right flex column of the card header,
+    // alongside the share/copy buttons. It is the only Badge element that
+    // contains one of the three known status strings.
+    return await this.page
+      .getByText(/^(Locked|Unlockable|Withdrawn)$/)
+      .first()
+      .textContent()
   }
 }

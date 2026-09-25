@@ -175,6 +175,42 @@
     "extendSuccess": "Lock extended.",
     "transferSuccess": "Beneficiary transferred."
   },
+  "lockStatus": {
+    "locked": "Locked",
+    "unlockable": "Unlockable",
+    "withdrawn": "Withdrawn"
+  },
+  "lockCreated": {
+    "title": "Lock Created | StellarLock",
+    "description": "Your lock has been created successfully on Stellar.",
+    "heading": "Lock Created!",
+    "subheading": "Your tokens are now locked on-chain.",
+    "vestingActive": "A vesting schedule is active.",
+    "lockSummary": "Lock Summary",
+    "lockId": "Lock ID",
+    "copyLockId": "Copy lock ID",
+    "type": "Type",
+    "lpLock": "LP Lock",
+    "tokenLock": "Token Lock",
+    "token": "Token",
+    "amount": "Amount",
+    "beneficiary": "Beneficiary",
+    "creator": "Creator",
+    "unlockDate": "Unlock date",
+    "vesting": "Vesting",
+    "vestingEnabled": "Linear vesting enabled",
+    "createdAt": "Created at",
+    "transactionDetails": "Transaction Details",
+    "txHash": "TX Hash",
+    "copyTxHash": "Copy transaction hash",
+    "viewTxStellarExpert": "View transaction on Stellar Expert",
+    "network": "Network",
+    "shareTitle": "Share this lock",
+    "copyShareLink": "Copy shareable link",
+    "viewLockDetail": "View Lock Detail",
+    "createAnother": "Create Another",
+    "copied": "{{label}} copied!"
+  },
   "explorer": {
     "backToSearch": "Back to search",
     "verifiedLocked": "Liquidity verified locked",
@@ -363,6 +399,16 @@
       "message": "You've exceeded the rate limit for creating locks. Please wait before creating another lock.",
       "recovery": "Wait a moment and try again."
     },
+    "lockDurationTooShort": {
+      "title": "Lock Duration Too Short",
+      "message": "The unlock date is too close to the current time. A minimum lock duration is required.",
+      "recovery": "Choose an unlock date at least 24 hours in the future."
+    },
+    "extensionLimitExceeded": {
+      "title": "Extension Limit Exceeded",
+      "message": "This lock has already been extended the maximum number of times allowed.",
+      "recovery": "No further extensions are possible for this lock."
+    },
     "unlockTooSoon": {
       "title": "Extension Too Short",
       "message": "The new unlock date must be far enough past the current one to count as an extension.",
@@ -447,6 +493,21 @@
       "title": "Identical Tokens",
       "message": "Token A and Token B must be different addresses.",
       "recovery": "Choose two distinct token addresses for your LP pair."
+    },
+    "notInitialized": {
+      "title": "Contract Not Initialized",
+      "message": "The contract has not been initialized with an administrator yet.",
+      "recovery": "Contact the contract operator to initialize the deployment."
+    },
+    "lockNotFound": {
+      "title": "Lock Not Found",
+      "message": "No lock record was found matching this lock ID.",
+      "recovery": "Verify the lock ID and contract address and try again."
+    },
+    "contractPaused": {
+      "title": "Contract Paused",
+      "message": "The contract is currently paused by the administrator for maintenance or emergency.",
+      "recovery": "Please try again later once operations have been resumed."
     }
   },
   "analytics": {

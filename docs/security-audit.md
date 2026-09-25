@@ -39,9 +39,10 @@
 
 ### 4. Storage TTL Expiry Risks
 
-- [ ] **Risk: Medium** — Soroban persistent storage entries have a TTL. If a lock's storage entry expires due to non-renewal, the lock data becomes inaccessible and tokens could be permanently locked (unrecoverable).
-- [ ] **Recommendation**: Implement automatic TTL extension on read/write operations using `env.storage().persistent().extend_ttl()`. Consider a public `bump_ttl(id)` method that anyone can call to keep critical lock data alive.
-- [ ] **Recommendation**: Document the TTL policy and build a monitoring service that extends TTLs for active locks before expiry.
+- [x] **Status: Mitigated** — Soroban persistent storage entries have a TTL. Active locks are protected against non-renewal.
+- [x] **Recommendation (Implemented)**: Automatic TTL extension on read/write operations is implemented via `env.storage().persistent().extend_ttl()` for active locks (see [docs/storage-optimization-148.md](storage-optimization-148.md)). Both contracts expose a permissionless `bump_lock_ttl(id)` entry point allowing anyone to keep lock data alive.
+- [x] **Recommendation (Implemented)**: Documented TTL policy in [docs/storage-optimization-148.md](storage-optimization-148.md).
+
 
 ### 5. Cross-Contract Call Safety
 
@@ -79,7 +80,7 @@
 ## Pre-Mainnet Checklist
 
 - [ ] Engage a professional Soroban audit firm (e.g., OtterSec, Halborn, CertiK)
-- [ ] Implement storage TTL extension strategy
+- [x] Implement storage TTL extension strategy (selective TTL renewal per [docs/storage-optimization-148.md](storage-optimization-148.md) and permissionless `bump_lock_ttl` entry points)
 - [ ] Add fuzzing tests for vesting arithmetic edge cases
 - [ ] Load test with 1000+ locks per address to validate pagination under resource limits
 - [ ] Set up on-chain monitoring for unexpected state transitions
