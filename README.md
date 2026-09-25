@@ -161,7 +161,7 @@ Both share a SQLite index on the `indexer-data` volume. See [Indexer & notificat
 
 | File | Purpose |
 |---|---|
-| `Dockerfile.dev` | Frontend — Node 20 + pnpm, dependency layer caching |
+| `Dockerfile.dev` | Frontend — Node 22 + pnpm, dependency layer caching |
 | `Dockerfile.contracts` | Contracts — Rust + Soroban CLI |
 | `docker-compose.yml` | Orchestrates the frontend, contracts, indexer and notifier services |
 | `.dockerignore` | Excludes `node_modules`, `target`, build artifacts, and secrets |
