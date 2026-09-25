@@ -19,7 +19,8 @@ Enforce two complementary security guarantees on-chain:
 ## Consequences
 - `withdraw` requires `lock.beneficiary.require_auth()`
 - `extend` requires `lock.creator.require_auth()` and rejects `new_unlock_at <= unlock_at`
-- `propose_upgrade` sets `execute_after = now + 7 days`; `execute_upgrade` panics
-  if the timelock has not elapsed
+- `propose_upgrade` sets `execute_after = now + 7 days`; `execute_upgrade` panics if the timelock has not elapsed
+- Admin ownership changes use a two-step handoff: the current admin nominates a pending admin with `propose_admin`, and only that pending address can complete the transfer with `accept_admin`
+- The current admin can `pause()` each contract independently to block non-admin lock writes and later `unpause()` it; read queries and admin/governance calls remain available, and pausing does not cancel a pending upgrade
 - UI surfaces the immutable-lock warning prominently in the confirmation modal
 - Admin role is separate from beneficiary/creator roles; admin cannot move user funds

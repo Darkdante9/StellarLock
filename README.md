@@ -181,6 +181,8 @@ pnpm indexer:start    # polls Soroban contract events into the index (every INDE
 pnpm notifier:start   # sends 7d / 1d / at-unlock reminders (every NOTIFIER_INTERVAL_MS, default 1h)
 ```
 
+See [docs/indexer-architecture.md](docs/indexer-architecture.md) for event idempotency, cursor recovery, and release accounting details.
+
 | Variable | Used by | Purpose |
 |---|---|---|
 | `LOCK_INDEX_DB_PATH` | both, and `api/` | SQLite file path (default `lock-index.sqlite`). Must be the same file for every process. |
@@ -263,12 +265,21 @@ Both contracts implement an **admin upgrade with a 7-day timelock**.
 - The admin can call `cancel_upgrade()` at any time to abort a pending proposal.
 - All upgrade events (`upgrade_proposed`, `upgrade_cancelled`) are emitted on-chain.
 
+Admin ownership can be transferred without changing the upgrade timelock. The current admin first nominates a replacement with `propose_admin(new_admin)`. The nominated address must authenticate a separate `accept_admin()` call; only then does it become the admin. Until acceptance, the current admin remains active. `get_admin()` returns the current admin, or `None` before initialization.
+
 | Function | Who | Effect |
 |---|---|---|
 | `init(admin)` | deployer (once) | Sets the admin address |
+| `get_admin()` | anyone | Returns the current admin, if initialized |
+| `propose_admin(new_admin)` | current admin | Stores a pending admin nomination |
+| `accept_admin()` | pending admin | Completes the two-step transfer and clears the pending nomination |
 | `propose_upgrade(wasm_hash)` | admin | Queues upgrade, 7-day delay |
 | `execute_upgrade()` | admin | Applies upgrade after delay |
 | `cancel_upgrade()` | admin | Cancels pending proposal |
+| `pause()` | admin | Blocks lock lifecycle writes until `unpause()` |
+| `unpause()` | admin | Restores normal lock lifecycle writes |
+
+`pause()` and `unpause()` are emergency controls on each contract independently. While paused, non-admin write operations such as lock creation, withdrawal, extension, and beneficiary transfer fail with `ContractPaused`; read-only queries and admin/governance functions remain available. A pending upgrade can still execute after its timelock, so operators should cancel an unsafe pending upgrade separately. See [docs/incident-response.md](docs/incident-response.md) for the response workflow.
 
 > The upgrade path exists solely for critical security fixes. User lock funds are held in persistent storage and are unaffected by WASM upgrades.
 
