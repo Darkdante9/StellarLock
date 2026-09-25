@@ -36,6 +36,8 @@ const TOKEN_LOCKER_ID = process.env.TOKEN_LOCKER_CONTRACT || ""
 const LP_LOCKER_ID = process.env.LP_LOCKER_CONTRACT || ""
 const POLL_INTERVAL_MS = Number(process.env.INDEXER_POLL_INTERVAL_MS || 10_000)
 const EVENTS_PAGE_LIMIT = 100
+/** Max time to wait for a single Soroban RPC call before treating it as failed. */
+const RPC_CALL_TIMEOUT_MS = Number(process.env.INDEXER_RPC_TIMEOUT_MS || 15_000)
 
 const META_CURSOR = "cursor"
 const META_LAST_LEDGER = "last_indexed_ledger"
@@ -257,6 +259,11 @@ export function processEvent(event: ContractEvent): void {
         break
       }
       case "lp_lock_withdrawn": {
+        // Contract emits topics=(symbol, id), data=(beneficiary, pool_share, releasable).
+        // Like the token-locker, a vesting LP lock can emit several of these
+        // (one per partial claim), so cumulative tracking via applyRelease is
+        // required — unconditionally marking "withdrawn" here would wrongly
+        // close out a lock after its first partial claim.
         // Contract emits topics=(symbol, id), data=(beneficiary, pool_share, releasable) —
         // a vesting LP lock can emit several of these (one per partial
         // claim), so cumulative tracking via applyRelease is required.
@@ -283,6 +290,18 @@ export function processEvent(event: ContractEvent): void {
         const lockId = `lp:${String(id)}`
         if (!s.insertEvent.run(event.id, event.ledger, name, lockId).changes) return
         s.setBeneficiary.run(String(newBeneficiary), lockId)
+        break
+      }
+      // Each split-group child now publishes its own `lp_lock_created` event
+      // (own id, beneficiary, amount) handled by that case above, including
+      // the first child, whose id equals the group id. This event is only a
+      // group-level summary — it must NOT upsert a lock row, since that
+      // would clobber the correct per-child row with the group's aggregate
+      // total and the creator standing in as beneficiary.
+      case "lp_split_lock_created": {
+        const [, groupId] = event.topics
+        const lockId = `lp:${String(groupId)}`
+        s.insertEvent.run(event.id, event.ledger, name, lockId)
         break
       }
       default:
@@ -403,6 +422,30 @@ export interface EventSource {
 }
 
 /**
+ * Rejects with a timeout error if `promise` doesn't settle within `ms`.
+ * Used to bound Soroban RPC calls that can hang (connection accepted, no
+ * response) rather than erroring, which would otherwise wedge the poller's
+ * `inFlight` guard forever.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`[indexer] ${label} timed out after ${ms}ms`))
+    }, ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      },
+    )
+  })
+}
+
+/**
  * Fetch and index the next page of contract events, persisting the RPC
  * cursor / last ledger in index_meta so progress survives restarts.
  * Returns the number of events processed.
@@ -424,13 +467,16 @@ export async function pollOnce(server: EventSource): Promise<number> {
     request = { cursor, filters, limit: EVENTS_PAGE_LIMIT }
   } else {
     const lastLedger = Number(getMeta(META_LAST_LEDGER) ?? 0)
-    const startLedger = lastLedger > 0 ? lastLedger + 1 : (await server.getLatestLedger()).sequence
+    const startLedger =
+      lastLedger > 0
+        ? lastLedger + 1
+        : (await withTimeout(server.getLatestLedger(), RPC_CALL_TIMEOUT_MS, "getLatestLedger")).sequence
     request = { startLedger, filters, limit: EVENTS_PAGE_LIMIT }
   }
 
   let resp: Awaited<ReturnType<EventSource["getEvents"]>>
   try {
-    resp = await server.getEvents(request)
+    resp = await withTimeout(server.getEvents(request), RPC_CALL_TIMEOUT_MS, "getEvents")
   } catch (err) {
     // A stored cursor can age out of the RPC node's retention window (e.g.
     // after the indexer has been down for a while, or the node's retention
@@ -464,10 +510,16 @@ export async function pollOnce(server: EventSource): Promise<number> {
 
   if (resp.cursor) setMeta(META_CURSOR, resp.cursor)
   const maxEventLedger = resp.events.reduce((max, e) => Math.max(max, e.ledger), 0)
-  // If the page was full there may be more events below latestLedger,
-  // so only advance as far as what was actually processed.
-  const lastIndexed =
-    resp.events.length >= EVENTS_PAGE_LIMIT ? maxEventLedger : Math.max(maxEventLedger, resp.latestLedger)
+  const pageFull = resp.events.length >= EVENTS_PAGE_LIMIT
+  // If the page was full there may be more events in the same ledger that the
+  // cursor would have reached. Record one ledger *before* maxEventLedger so
+  // that if the cursor later expires the fallback (startLedger = lastIndexed + 1)
+  // re-includes maxEventLedger rather than skipping its tail. Already-seen
+  // event IDs are deduplicated by INSERT OR IGNORE, so the re-fetch is safe.
+  // When the page is partial we've consumed everything up to latestLedger.
+  const lastIndexed = pageFull
+    ? Math.max(maxEventLedger - 1, 0)
+    : Math.max(maxEventLedger, resp.latestLedger)
   if (lastIndexed > getLastIndexed()) setMeta(META_LAST_LEDGER, String(lastIndexed))
 
   return processed

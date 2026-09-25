@@ -31,6 +31,10 @@
 
 ### 3. Authorization Model (`require_auth`)
 
+Both `TokenLocker` and `LpLocker` expose the same set of gated entry points. All 13 call sites are listed below, grouped by the signer required.
+
+#### User-gated (lock-level)
+
 - [x] **`create_lock`**: `creator.require_auth()` — ensures the funder authorized the token transfer
 - [x] **`withdraw`**: `lock.beneficiary.require_auth()` — only the beneficiary can withdraw
 - [x] **`extend`**: `lock.creator.require_auth()` — only the creator can extend
@@ -38,12 +42,30 @@
 - [x] **Admin management**: `get_admin()` is read-only; `propose_admin()` requires the current admin; `accept_admin()` requires the nominated pending admin
 - [x] **Emergency controls**: `pause()` and `unpause()` require the current admin; a pause blocks non-admin lock lifecycle writes but does not block reads or admin/governance calls
 - [x] All write operations require authentication from the appropriate party
+- [x] **`create_split_lock`**: `creator.require_auth()` — same guarantee for split/multi-beneficiary locks
+- [x] **`withdraw`**: `lock.beneficiary.require_auth()` — only the designated beneficiary can withdraw
+- [x] **`extend`**: `lock.creator.require_auth()` — only the original creator can extend the unlock date
+- [x] **`transfer_beneficiary`**: `lock.beneficiary.require_auth()` — only the current beneficiary can reassign the role
+
+#### Admin-gated (contract-level)
+
+- [x] **`init`**: `admin.require_auth()` — prevents anyone other than the supplied admin from initialising the contract
+- [x] **`propose_admin`**: `admin.require_auth()` — only the current admin can nominate a successor
+- [x] **`accept_admin`**: `pending.require_auth()` — the incoming admin must sign to complete the two-step handover
+- [x] **`propose_upgrade`**: `admin.require_auth()` — only admin can submit a new WASM hash for the time-locked upgrade queue
+- [x] **`execute_upgrade`**: `admin.require_auth()` — only admin can apply a queued upgrade after the delay period
+- [x] **`cancel_upgrade`**: `admin.require_auth()` — only admin can abort a pending upgrade
+- [x] **`pause`**: `admin.require_auth()` — only admin can halt user-facing operations
+- [x] **`unpause`**: `admin.require_auth()` — only admin can resume operations
+
+> **Note**: The admin-gated functions are the highest-privilege operations in the system. A compromised or malicious admin could pause the contract indefinitely, push a malicious upgrade, or reassign themselves out of admin to a fresh address. The two-step admin transfer and the upgrade time-lock mitigate these risks but do not eliminate them entirely. Both should be covered in any third-party audit.
 
 ### 4. Storage TTL Expiry Risks
 
-- [ ] **Risk: Medium** — Soroban persistent storage entries have a TTL. If a lock's storage entry expires due to non-renewal, the lock data becomes inaccessible and tokens could be permanently locked (unrecoverable).
-- [ ] **Recommendation**: Implement automatic TTL extension on read/write operations using `env.storage().persistent().extend_ttl()`. Consider a public `bump_ttl(id)` method that anyone can call to keep critical lock data alive.
-- [ ] **Recommendation**: Document the TTL policy and build a monitoring service that extends TTLs for active locks before expiry.
+- [x] **Status: Mitigated** — Soroban persistent storage entries have a TTL. Active locks are protected against non-renewal.
+- [x] **Recommendation (Implemented)**: Automatic TTL extension on read/write operations is implemented via `env.storage().persistent().extend_ttl()` for active locks (see [docs/storage-optimization-148.md](storage-optimization-148.md)). Both contracts expose a permissionless `bump_lock_ttl(id)` entry point allowing anyone to keep lock data alive.
+- [x] **Recommendation (Implemented)**: Documented TTL policy in [docs/storage-optimization-148.md](storage-optimization-148.md).
+
 
 ### 5. Cross-Contract Call Safety
 
@@ -82,7 +104,7 @@
 ## Pre-Mainnet Checklist
 
 - [ ] Engage a professional Soroban audit firm (e.g., OtterSec, Halborn, CertiK)
-- [ ] Implement storage TTL extension strategy
+- [x] Implement storage TTL extension strategy (selective TTL renewal per [docs/storage-optimization-148.md](storage-optimization-148.md) and permissionless `bump_lock_ttl` entry points)
 - [ ] Add fuzzing tests for vesting arithmetic edge cases
 - [ ] Load test with 1000+ locks per address to validate pagination under resource limits
 - [ ] Set up on-chain monitoring for unexpected state transitions

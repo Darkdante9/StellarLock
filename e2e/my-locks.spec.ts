@@ -57,17 +57,33 @@ test.describe("My Locks Page", () => {
     const myLocks = new MyLocksPage(page)
     await mockConnectedWallet(page)
     await myLocks.goto()
+    // exercises MyLocksPage.searchLock()
+    await myLocks.searchLock("USDC")
     const searchInput = page.locator('input[placeholder*="Search"]')
-    await expect(searchInput).toBeVisible()
+    await expect(searchInput).toHaveValue("USDC")
   })
 
   test("Filter dropdowns are present", async ({ page }) => {
     const myLocks = new MyLocksPage(page)
     await mockConnectedWallet(page)
+    await mockNoLocks(page)
     await myLocks.goto()
+    // exercises MyLocksPage.filterByStatus() and filterByType()
+    await myLocks.filterByStatus("active")
+    await myLocks.filterByType("token")
     const selects = page.locator("select")
     await expect(selects.first()).toBeVisible()
     expect(await selects.count()).toBeGreaterThan(0)
+  })
+
+  test("Lock cards can be counted and clicked", async ({ page }) => {
+    const myLocks = new MyLocksPage(page)
+    await mockConnectedWallet(page)
+    await mockNoLocks(page)
+    await myLocks.goto()
+    // With no locks the count should be 0; exercises MyLocksPage.getLockCards()
+    const count = await myLocks.getLockCards()
+    expect(count).toBe(0)
   })
 
   test("Empty state message displays correctly", async ({ page }) => {

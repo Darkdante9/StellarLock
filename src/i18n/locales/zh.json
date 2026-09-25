@@ -424,6 +424,16 @@
       "recovery": "请在允许范围内选择更早的日期。",
       "title": "延长时间过长"
     },
+    "lockDurationTooShort": {
+      "message": "解锁日期距当前时间过近。必须满足最小锁定时长要求。",
+      "recovery": "请选择至少在24小时后的解锁日期。",
+      "title": "锁定持续时间过短"
+    },
+    "extensionLimitExceeded": {
+      "message": "此锁定已达到允许的最大延长次数。",
+      "recovery": "无法对此锁定进行更多延长。",
+      "title": "已超出延长限制"
+    },
     "unlockTooSoon": {
       "message": "新的解锁日期必须比当前日期晚出足够的时间才能算作延长。",
       "recovery": "请选择一个更靠后的日期。",

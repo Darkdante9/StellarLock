@@ -19,9 +19,8 @@ Every entry maps directly to an error case defined in `src/lib/errors.ts`.
   - [AlreadyWithdrawn](#alreadywithdrawn)
   - [CanOnlyExtend](#cononlyextend)
   - [LockDurationTooLong](#lockdurationtoolong)
-  - [UnlockTooSoon](#unlocktooson)
-  - [ExtensionLimitReached](#extensionlimitreached)
-  - [UnlockExceedsMax](#unlockexceedsmax)
+  - [LockDurationTooShort](#lockdurationtooshort)
+  - [ExtensionLimitExceeded](#extensionlimitexceeded)
   - [NothingToRelease](#nothingtorerelease)
   - [VestingEndBeforeStart](#vestingendbeforestart)
   - [TooFewBeneficiaries](#toofewbeneficiaries)
@@ -34,6 +33,9 @@ Every entry maps directly to an error case defined in `src/lib/errors.ts`.
   - [NotPendingAdmin](#notpendingadmin)
   - [ReentrancyDetected](#reentrancydetected)
   - [IdenticalTokens](#identicaltokens)
+  - [NotInitialized](#notinitialized)
+  - [LockNotFound](#locknotfound)
+  - [ContractPaused](#contractpaused)
 - [Connection issues](#connection-issues)
   - [Freighter not detected](#freighter-not-detected)
   - [Wallet disconnected mid-session](#wallet-disconnected-mid-session)
@@ -140,13 +142,13 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ### LockDurationTooLong
 
-**Cause:** The requested lock duration exceeds the contract's maximum allowed duration (typically 10 years).
+**Cause:** The requested lock duration exceeds the contract's maximum allowed duration (typically 10 years). This error is used for both create-time and extend-time duration checks.
 
 **Fix:** Choose an unlock date closer to the present. If you genuinely need a very long lock, consider creating multiple sequential locks.
 
 ---
 
-### UnlockTooSoon
+### LockDurationTooShort
 
 **Cause:** The unlock date is too close to the current time — the contract enforces a minimum lock duration (e.g. at least 1 day).
 
@@ -154,7 +156,7 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ---
 
-### ExtensionLimitReached
+### ExtensionLimitExceeded
 
 **Cause:** The lock has already been extended the maximum number of times the contract permits.
 
@@ -162,13 +164,6 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ---
 
-### UnlockExceedsMax
-
-**Cause:** The new unlock date you chose when extending is beyond the contract's absolute maximum allowed unlock timestamp.
-
-**Fix:** Choose an earlier date. The contract's maximum is enforced globally regardless of the original lock duration.
-
----
 
 ### NothingToRelease
 
@@ -214,11 +209,11 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ### RateLimitExceeded
 
-**Cause:** Your account has submitted too many contract invocations within a short window. The contract enforces a per-account rate limit to protect the network from spam.
+**Cause:** Your account called `create_lock` or `create_split_lock` again within `RATE_LIMIT_COOLDOWN` (60 seconds) of its last call. The contract enforces this per-creator cooldown to protect against spam. See [ADR-010](./adr/ADR-010-rate-limit-via-temporary-storage.md) for the design behind it.
 
 **Fix:**
-1. Wait a few minutes before retrying.
-2. If you are running automated scripts or tests, add a delay between calls.
+1. Wait about 60 seconds before retrying (not "a few minutes" — the cooldown is exactly `RATE_LIMIT_COOLDOWN`, defined in `contracts/locker-common/src/lib.rs`).
+2. If you are running automated scripts or tests, add a 60-second delay between calls from the same account.
 3. On Mainnet, if you legitimately need a higher throughput, contact the StellarLock team to discuss options.
 
 ---
@@ -270,6 +265,30 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 **Cause:** You tried to create an LP (liquidity-pair) lock where both token addresses in the pair are the same. The LP locker contract requires two distinct tokens.
 
 **Fix:** Select two different token addresses for the liquidity pair. If you want to lock a single token, use the standard token locker instead.
+
+---
+
+### NotInitialized
+
+**Cause:** The contract deployment has not been initialized with an admin address yet, or an admin-only operation was invoked on an uninitialized contract instance.
+
+**Fix:** If you are the contract deployer, call the `init(admin)` entry point once after deploying the contract. If you are an end user, the contract operator has not finalized the deployment — contact the contract operator or team.
+
+---
+
+### LockNotFound
+
+**Cause:** The requested lock ID does not exist in the contract's storage. This can happen if an invalid ID was entered into the URL or explorer, or if the lock was created on a different contract deployment/network.
+
+**Fix:** Double-check the lock ID and contract address. Confirm that you are connected to the correct network (Testnet vs. Mainnet).
+
+---
+
+### ContractPaused
+
+**Cause:** The contract is currently paused by the administrator using the emergency circuit breaker mechanism (`pause()`). All lock creations, withdrawals, extensions, and beneficiary transfers are temporarily halted.
+
+**Fix:** Wait for the contract administrator to resolve the maintenance/incident and call `unpause()`. Read queries remain operational during a pause. Check team communication channels or status updates for more details.
 
 ---
 

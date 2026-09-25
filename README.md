@@ -8,9 +8,11 @@ Token and LP liquidity lock platform built on [Stellar Soroban](https://soroban.
 
 - **Token locks** — lock any SEP-41 token until a chosen date, with optional linear vesting
 - **LP locks** — lock Aquarius or Soroswap pool share tokens
+- **Split locks** — create atomic multi-beneficiary locks (2–10 beneficiaries) in a single transaction with proportional shares
 - **Public explorer** — anyone can verify locks by token contract address
 - **Extend locks** — creators can extend the unlock date, never shorten it
-- **Beneficiary model** — creator and beneficiary can be different addresses (vesting, team grants)
+- **Beneficiary model & transfer** — creator and beneficiary can be different addresses (vesting, team grants) with beneficiary transfer support
+- **Emergency pause & admin safety** — circuit breaker pause and two-step admin transfer protection
 - **Freighter wallet** integration
 
 ## Live Contracts (Testnet)
@@ -161,7 +163,7 @@ Both share a SQLite index on the `indexer-data` volume. See [Indexer & notificat
 
 | File | Purpose |
 |---|---|
-| `Dockerfile.dev` | Frontend — Node 20 + pnpm, dependency layer caching |
+| `Dockerfile.dev` | Frontend — Node 22 + pnpm, dependency layer caching |
 | `Dockerfile.contracts` | Contracts — Rust + Soroban CLI |
 | `docker-compose.yml` | Orchestrates the frontend, contracts, indexer and notifier services |
 | `.dockerignore` | Excludes `node_modules`, `target`, build artifacts, and secrets |
@@ -226,25 +228,42 @@ Paste the printed contract IDs into `src/lib/stellar.ts` under `CONTRACTS`.
 
 ### Contract API
 
+For authoritative contract interface details, storage layout, invariants, and split lock specifications, see [contracts/README.md](contracts/README.md).
+
 #### Token Locker
 
 | Function | Description |
 |---|---|
 | `create_lock(creator, token, amount, beneficiary, unlock_at, vesting?)` | Lock tokens, returns lock id |
+| `create_split_lock(creator, token, total_amount, beneficiaries, unlock_at, vesting?)` | Lock tokens split across 2–10 beneficiaries, returns group id |
 | `withdraw(id)` | Beneficiary withdraws after unlock |
 | `extend(id, new_unlock_at)` | Creator extends unlock date |
+| `transfer_beneficiary(id, new_beneficiary)` | Beneficiary transfers lock ownership |
+| `bump_lock_ttl(id)` | Extends TTL for persistent lock and instance entries |
 | `get_lock(id)` | Fetch a single lock |
-| `get_locks_by_creator(address)` | All locks created by address |
-| `get_locks_by_beneficiary(address)` | All locks where address is beneficiary |
-| `get_locks_by_token(token)` | All locks for a token (powers the explorer) |
+| `get_locks_by_creator(address, offset, limit)` | Locks created by address (paginated) |
+| `get_locks_by_beneficiary(address, offset, limit)` | Locks where address is beneficiary (paginated) |
+| `get_locks_by_token(token, offset, limit)` | Locks for a token (powers the explorer, paginated) |
+| `get_lock_count_by_creator(address)` | Total lock count for a creator |
+| `get_lock_count_by_beneficiary(address)` | Total lock count for a beneficiary |
+| `get_lock_count_by_token(token)` | Total lock count for a token |
+| `get_split_group(group_id)` | Fetch a split group record and its sub-lock IDs |
+| `get_split_groups_by_creator(creator, offset, limit)` | Split groups created by address (paginated) |
+| `get_total_locked(token)` | TVL currently locked for a token |
+| `get_global_stats()` | Total lock count and unique token count across the contract |
 | `init(admin)` | Set admin once after deployment |
+| `get_admin()` | Return current contract admin |
+| `propose_admin(new_admin)` | Step 1 of two-step admin transfer |
+| `accept_admin()` | Step 2 of two-step admin transfer |
+| `pause()` | Emergency pause: blocks creation, withdrawal, extension, transfers |
+| `unpause()` | Unpause the contract |
 | `propose_upgrade(wasm_hash)` | Queue a WASM upgrade (7-day timelock) |
 | `execute_upgrade()` | Apply upgrade after timelock elapses |
 | `cancel_upgrade()` | Cancel a pending upgrade |
 
 #### LP Locker
 
-Same shape as Token Locker, minus vesting, plus `dex`, `token_a`, `token_b` fields. Shares the same `init`, `propose_upgrade`, `execute_upgrade`, `cancel_upgrade` API.
+Same shape as Token Locker, minus vesting, plus `dex`, `token_a`, `token_b` fields. Supports `create_split_lock`, `get_split_group`, `get_split_groups_by_creator`, and shares the same `init`, `get_admin`, `propose_admin`, `accept_admin`, `pause`, `unpause`, `propose_upgrade`, `execute_upgrade`, `cancel_upgrade` API. Detailed in [contracts/README.md](contracts/README.md).
 
 ## Screenshots
 

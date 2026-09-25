@@ -1,22 +1,16 @@
-# ADR-008: Mock Data Strategy for Testnet
+# ADR-008: Indexer-Backed Stats with Graceful Zeroed Fallback (Supersedes Mock Data Strategy)
 
 ## Status
-Accepted
+Superseded (Mock data fallback removed; live indexer with zeroed fallback adopted)
 
 ## Context
-On testnet, real locks may be sparse or nonexistent. A blank explorer page
-hurts UX and makes it hard to demonstrate the product before mainnet launch.
+Originally, Landing and Discover pages were seeded with a static `MOCK_LOCKS` array to avoid blank pages when testnet lock activity was sparse. However, as the indexer service was implemented, the application transitioned to live aggregated statistics.
 
 ## Decision
-Seed the Discover and Landing pages with a static `MOCK_LOCKS` array from
-`src/lib/mock-data.ts`. Real on-chain data is used in the Explorer and MyLocks
-pages via the contract RPC; mock data is purely for public-facing demo content.
+Landing and Discover pages fetch live indexer statistics over the network via `querySiteStats` (in `queryLocks.ts`) and `useDiscoverStats` (hitting `/api/indexer-stats`). If the indexer is unreachable or returns an error, the pages gracefully degrade to an empty / zeroed `SiteStats` object rather than falling back to static mock data. `MOCK_LOCKS` has been removed from page components and is effectively dead code outside unit/integration tests.
 
 ## Consequences
-- Landing and Discover pages render realistic TVL, token groups, and recent
-  activity without any backend
-- Mock data is TypeScript, typed to the same `Lock` interface as on-chain data
-- No network request is made for mock pages, so they work offline and in
-  restricted environments
-- Transition to real data requires removing the `MOCK_LOCKS` import and
-  swapping in live `useLocks` hooks
+- Landing and Discover pages reflect actual on-chain activity indexed by the backend service.
+- If the indexer is down or unreachable, pages display zeroed stats rather than simulated demo figures, ensuring users and contributors are not misled by artificial numbers.
+- Network requests to `/api/indexer-stats` are required to populate statistics on these pages.
+- `MOCK_LOCKS` is no longer imported or rendered by any production page component.

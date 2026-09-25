@@ -27,27 +27,24 @@ test.describe("Explorer Page", () => {
 
   test("Token header displays after loading", async ({ page }) => {
     const explorer = new ExplorerPage(page)
-    // Use a mock token address (would be real in prod)
     await explorer.goto("GBMXUQVSF5VVFV7THVNO6ZSPHVZXDXHEHC3CFLCV4BQXLRGLVKZAQWEF")
-    await explorer.waitForTokenHeader()
-    const name = await explorer.getTokenName()
-    expect(name).toBeTruthy()
+    await expect(explorer.tokenHeading()).toBeVisible()
+    await expect(explorer.tokenHeading()).not.toBeEmpty()
   })
 
   test("Lock list renders", async ({ page }) => {
     const explorer = new ExplorerPage(page)
     await explorer.goto("GBMXUQVSF5VVFV7THVNO6ZSPHVZXDXHEHC3CFLCV4BQXLRGLVKZAQWEF")
-    await explorer.waitForTokenHeader()
-    const lockCount = await explorer.getLockCount()
-    expect(lockCount).toBeGreaterThanOrEqual(0)
+    await expect(explorer.tokenHeading()).toBeVisible()
+    // At least one LockCard must be present — expect() auto-waits and fails
+    // loudly if the selector never matches.
+    await expect(explorer.lockList().first()).toBeVisible()
   })
 
   test("Shows empty state for nonexistent token", async ({ page }) => {
     const explorer = new ExplorerPage(page)
     await explorer.goto("GBADZZZ5VVFV7THVNO6ZSPHVZXDXHEHC3CFLCV4BQXLRGLVKZAQWEF")
-    await page.waitForTimeout(500)
-    const text = await page.textContent("text=/not found|no locks/i")
-    expect(text).toBeTruthy()
+    await expect(explorer.emptyOrNotFound()).toBeVisible()
   })
 })
 

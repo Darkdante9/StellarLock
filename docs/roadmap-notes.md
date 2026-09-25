@@ -9,39 +9,34 @@ Internal planning notes (moved from a misnamed `README.me` at the repo root). Th
 3. Another issue concerns incomplete Arabic localization support.
 4. The batch lock creation issue arises from a mismatch between feature request and implementation.
 5. The request asked for a single transaction that creates multiple locks.
-6. The current contracts only support single-lock creation.
-7. Specifically, both `contracts/token-locker/src/lib.rs` and `contracts/lp-locker/src/lib.rs` expose only `create_lock`.
-8. There is no `create_locks` entry point in either contract.
-9. As a result, the app must send one transaction per lock.
-10. Each transaction requires a separate wallet signature.
-11. This is a poor user experience for projects that need multiple locks.
-12. It also increases blockchain fees and friction.
-13. The frontend has a bulk operations feature, but it is not the same thing.
-14. `BulkActionsToolbar` and `BulkConfirmModal` operate on existing locks.
-15. They support bulk extending or bulk transferring existing lock records.
-16. They do not support creating multiple new locks in a single transaction.
-17. The issue therefore remains unresolved even after the related work.
-18. A proper batch creation flow needs two pieces.
-19. The first piece is contract-level support for batched lock creation.
-20. The second piece is frontend UI to collect multiple lock definitions and submit them.
-21. On the contract side, the code must validate each requested lock.
-22. Validation should likely include amount, token, beneficiary, and unlock date.
-23. It must also enforce the same rules as single-lock creation.
-24. All locks in the batch should be created atomically.
-25. If any one lock fails validation, the entire batch should revert.
-26. This prevents partial success and inconsistent state.
-27. A single entry point such as `create_locks(Vec<LockInput>)` is appropriate.
-28. The contract would iterate over incoming lock definitions.
-29. For each item, it would perform the same checks used by `create_lock`.
-30. Then it would create the lock records in the same storage context.
-31. This avoids multiple transactions and reduces user approvals.
-32. The batch entry point could also be useful for repeated single-token locking.
-33. It could support locking several different tokens at once.
-34. Or splitting a large allocation across several lock records.
-35. The latter is important for vesting or release scheduling scenarios.
-36. In the `lp-locker` contract, the same pattern applies.
-37. There are likely parallel storage and validation rules.
-38. Adding batch creation there will likely mirror token-locker changes.
+6. Note on multi-beneficiary split locks: Both `contracts/token-locker/src/lib.rs` and `contracts/lp-locker/src/lib.rs` already implement `create_split_lock`.
+7. `create_split_lock` provides atomic multi-lock creation for a single token deposit split across 2–10 beneficiaries using basis-point shares, generating independent lock records in a single transaction.
+8. What remains missing or distinct in the "batch creation" roadmap is a generalized `create_locks` (or arbitrary batch input) flow allowing heterogeneous parameters: multiple distinct tokens, independent release dates, and arbitrary per-lock configurations in one transaction, rather than identical token/date split configurations.
+9. Without a generic `create_locks(Vec<LockInput>)` entry point for non-split heterogeneous locks, the app must send one transaction per distinct lock configuration.
+10. Each individual transaction requires a separate wallet signature unless using `create_split_lock`.
+11. This distinction should be kept clear: split-allocation batching is already shipped via `create_split_lock`, while arbitrary multi-token/multi-parameter batching remains a future consideration.
+12. The frontend has a bulk operations feature, but it is not the same thing.
+13. `BulkActionsToolbar` and `BulkConfirmModal` operate on existing locks.
+14. They support bulk extending or bulk transferring existing lock records.
+15. They do not support creating multiple arbitrary new locks in a single transaction.
+16. The issue therefore only concerns arbitrary heterogeneous lock creation beyond split locks.
+17. A proper arbitrary batch creation flow needs two pieces:
+18. The first piece is contract-level support for batched lock creation (`create_locks(Vec<LockInput>)`).
+19. The second piece is frontend UI to collect multiple lock definitions and submit them.
+20. On the contract side, the code must validate each requested lock.
+21. Validation should likely include amount, token, beneficiary, and unlock date.
+22. It must also enforce the same rules as single-lock creation.
+23. All locks in the batch should be created atomically.
+24. If any one lock fails validation, the entire batch should revert.
+25. This prevents partial success and inconsistent state.
+26. A single entry point such as `create_locks(Vec<LockInput>)` is appropriate if multi-token batching is needed.
+27. The contract would iterate over incoming lock definitions.
+28. For each item, it would perform the same checks used by `create_lock`.
+29. Then it would create the lock records in the same storage context.
+30. This avoids multiple transactions and reduces user approvals for arbitrary multi-token configurations.
+31. The batch entry point could also be useful for repeated single-token locking across varying unlock dates.
+32. In the `lp-locker` contract, the same pattern applies.
+33. Adding generalized batch creation there would mirror token-locker changes.
 39. The frontend flow needs a "batch mode" on the create-lock form.
 40. It needs to let users queue multiple lock definitions.
 41. Each lock definition should include token, amount, beneficiary, unlock date.
