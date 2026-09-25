@@ -456,10 +456,16 @@ export async function pollOnce(server: EventSource): Promise<number> {
 
   if (resp.cursor) setMeta(META_CURSOR, resp.cursor)
   const maxEventLedger = resp.events.reduce((max, e) => Math.max(max, e.ledger), 0)
-  // If the page was full there may be more events below latestLedger,
-  // so only advance as far as what was actually processed.
-  const lastIndexed =
-    resp.events.length >= EVENTS_PAGE_LIMIT ? maxEventLedger : Math.max(maxEventLedger, resp.latestLedger)
+  const pageFull = resp.events.length >= EVENTS_PAGE_LIMIT
+  // If the page was full there may be more events in the same ledger that the
+  // cursor would have reached. Record one ledger *before* maxEventLedger so
+  // that if the cursor later expires the fallback (startLedger = lastIndexed + 1)
+  // re-includes maxEventLedger rather than skipping its tail. Already-seen
+  // event IDs are deduplicated by INSERT OR IGNORE, so the re-fetch is safe.
+  // When the page is partial we've consumed everything up to latestLedger.
+  const lastIndexed = pageFull
+    ? Math.max(maxEventLedger - 1, 0)
+    : Math.max(maxEventLedger, resp.latestLedger)
   if (lastIndexed > getLastIndexed()) setMeta(META_LAST_LEDGER, String(lastIndexed))
 
   return processed

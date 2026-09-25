@@ -41,15 +41,7 @@ export class MyLocksPage {
     return this.page.locator('[class*="animate-pulse"]').first()
   }
 
-  async getEmptyStateMessage() {
-    return await this.page.locator("text=/no locks/i").textContent()
-  }
-
   skeletonLockCard() {
     return this.page.locator('[class*="SkeletonLockCard"]').first()
-  }
-
-  async waitForSkeletonsToLoad() {
-    await this.page.locator('[class*="animate-pulse"]').first().waitFor()
   }
 }
