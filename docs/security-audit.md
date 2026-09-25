@@ -80,7 +80,7 @@
 ## Pre-Mainnet Checklist
 
 - [ ] Engage a professional Soroban audit firm (e.g., OtterSec, Halborn, CertiK)
-- [ ] Implement storage TTL extension strategy
+- [x] Implement storage TTL extension strategy (selective TTL renewal per [docs/storage-optimization-148.md](storage-optimization-148.md) and permissionless `bump_lock_ttl` entry points)
 - [ ] Add fuzzing tests for vesting arithmetic edge cases
 - [ ] Load test with 1000+ locks per address to validate pagination under resource limits
 - [ ] Set up on-chain monitoring for unexpected state transitions
