@@ -403,6 +403,16 @@
       "message": "Cüzdanınız yanlış ağa bağlı.",
       "recovery": "Freighter ayarlarında doğru ağa geçin."
     },
+    "lockDurationTooShort": {
+      "title": "Kilit Süresi Çok Kısa",
+      "message": "Kilit açma tarihi şu anki zamana çok yakın. Minimum kilit süresi gereklidir.",
+      "recovery": "En az 24 saat sonrası için bir kilit açma tarihi seçin."
+    },
+    "extensionLimitExceeded": {
+      "title": "Uzatma Sınırı Aşıldı",
+      "message": "Bu kilit, izin verilen maksimum sayıda zaten uzatıldı.",
+      "recovery": "Bu kilit için başka uzatma yapılamaz."
+    },
     "unlockTooSoon": {
       "title": "Uzatma Çok Kısa",
       "message": "Yeni kilit açma tarihi, bir uzatma sayılabilmesi için mevcut tarihten yeterince ileride olmalıdır.",

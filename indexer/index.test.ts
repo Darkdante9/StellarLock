@@ -258,6 +258,68 @@ describe("lock indexer", () => {
     expect(topTokens[0]).toMatchObject({ token: poolShareAddr, lockCount: 1, totalLocked: 250n })
   })
 
+  it("getTopTokens sorts by totalLocked descending when multiple tokens are still locked", async () => {
+    // Use a fresh isolated indexer so state from earlier tests doesn't interfere.
+    const fresh = await freshIndexer("top-tokens-sort")
+
+    const tokenX = Keypair.random().publicKey()
+    const tokenY = Keypair.random().publicKey()
+    const someCreator = Keypair.random().publicKey()
+    const someBeneficiary = Keypair.random().publicKey()
+    const futureUnlock = Math.floor(Date.now() / 1000) + 86_400
+
+    // Three still-locked locks:
+    //   tokenX: two locks summing to 300n
+    //   tokenY: one lock of 700n
+    // Expected order: tokenY (700n) first, tokenX (300n) second.
+    const server = new FakeRpcServer([
+      {
+        latestLedger: 200,
+        events: [
+          makeEvent("sx-1", 201, [
+            sym("lock_created"),
+            u64(1n),
+            addr(someCreator),
+            addr(tokenX),
+            i128(100n),
+            addr(someBeneficiary),
+            u64(BigInt(futureUnlock)),
+          ]),
+          makeEvent("sx-2", 202, [
+            sym("lock_created"),
+            u64(2n),
+            addr(someCreator),
+            addr(tokenX),
+            i128(200n),
+            addr(someBeneficiary),
+            u64(BigInt(futureUnlock)),
+          ]),
+          makeEvent("sy-1", 203, [
+            sym("lock_created"),
+            u64(3n),
+            addr(someCreator),
+            addr(tokenY),
+            i128(700n),
+            addr(someBeneficiary),
+            u64(BigInt(futureUnlock)),
+          ]),
+        ],
+      },
+    ])
+
+    await fresh.pollOnce(server)
+
+    const result = fresh.getTopTokens()
+
+    expect(result).toHaveLength(2)
+    // tokenY has the highest totalLocked and must come first.
+    expect(result[0]).toMatchObject({ token: tokenY, lockCount: 1, totalLocked: 700n })
+    // tokenX aggregates two locks: 100n + 200n = 300n.
+    expect(result[1]).toMatchObject({ token: tokenX, lockCount: 2, totalLocked: 300n })
+    // Verify the order is strictly descending.
+    expect(result[0].totalLocked).toBeGreaterThan(result[1].totalLocked)
+  })
+
   it("runs the polling loop on an interval via startPolling", async () => {
     vi.resetModules()
     const fresh: Indexer = await import("./index")
@@ -485,5 +547,101 @@ describe("lock indexer", () => {
     const afterWithdraw = fresh.getLocksForToken(splitToken)
     expect(afterWithdraw.find((l) => l.id === "token:10")?.status).toBe("locked")
     expect(afterWithdraw.find((l) => l.id === "token:11")?.status).toBe("withdrawn")
+  })
+
+  it("sets lastIndexed to maxEventLedger - 1 (not latestLedger) when a full page is returned, then advances past latestLedger on the subsequent non-full poll (#835)", async () => {
+    const fresh = await freshIndexer("full-page-boundary")
+    const boundaryToken = Keypair.random().publicKey()
+    const boundaryBeneficiary = Keypair.random().publicKey()
+    const boundaryUnlockAt = now + 86_400
+
+    // Build exactly EVENTS_PAGE_LIMIT (100) events all on ledger 800.
+    // latestLedger is set to 900 — well above maxEventLedger — to confirm
+    // the full-page branch ignores latestLedger and uses maxEventLedger - 1.
+    const fullPageEvents: FakeEvent[] = Array.from({ length: 100 }, (_, i) =>
+      makeEvent(`boundary-${i}`, 800, [
+        sym("lock_created"),
+        u64(BigInt(i + 1)),
+        addr(creator),
+        addr(boundaryToken),
+        i128(1n),
+        addr(boundaryBeneficiary),
+        u64(BigInt(boundaryUnlockAt)),
+      ]),
+    )
+
+    // Poll 1: page is exactly full (100 events), latestLedger=900 >> maxEventLedger=800.
+    // lastIndexed must be maxEventLedger - 1 = 799, NOT latestLedger (900).
+    await fresh.pollOnce(
+      new FakeRpcServer([{ latestLedger: 900, cursor: "boundary-cursor", events: fullPageEvents }]),
+    )
+    expect(fresh.getLastIndexed()).toBe(799)
+
+    // Poll 2: non-full page (0 events), latestLedger=910.
+    // The partial-page branch must advance lastIndexed to max(0, 910) = 910,
+    // correctly surpassing the latestLedger=900 that was intentionally skipped
+    // in poll 1. This confirms the two-phase logic is coherent end-to-end.
+    await fresh.pollOnce(new FakeRpcServer([{ latestLedger: 910, events: [] }]))
+    expect(fresh.getLastIndexed()).toBe(910)
+  })
+
+  it("resumes from maxEventLedger (inclusive) after a full-page poll whose cursor later expires (#836)", async () => {
+    const fresh = await freshIndexer("full-page-cursor-expiry")
+    const fullPageToken = Keypair.random().publicKey()
+    const fullPageBeneficiary = Keypair.random().publicKey()
+    const fullPageUnlockAt = now + 86_400
+
+    // Build a page of exactly EVENTS_PAGE_LIMIT (100) events spread across
+    // two ledgers: 99 events on ledger 700, one final event on ledger 701.
+    // The RPC cursor returned here points mid-stream inside ledger 701.
+    const fullPageEvents: FakeEvent[] = Array.from({ length: 99 }, (_, i) =>
+      makeEvent(`fp-${i}`, 700, [
+        sym("lock_created"),
+        u64(BigInt(i + 1)),
+        addr(creator),
+        addr(fullPageToken),
+        i128(1n),
+        addr(fullPageBeneficiary),
+        u64(BigInt(fullPageUnlockAt)),
+      ]),
+    )
+    // The 100th event lands on the *next* ledger — this is maxEventLedger.
+    fullPageEvents.push(
+      makeEvent("fp-99", 701, [
+        sym("lock_created"),
+        u64(100n),
+        addr(creator),
+        addr(fullPageToken),
+        i128(1n),
+        addr(fullPageBeneficiary),
+        u64(BigInt(fullPageUnlockAt)),
+      ]),
+    )
+
+    // Poll 1: full page. The cursor is stored; lastIndexed must be set to
+    // maxEventLedger - 1 (700) so a ledger-based fallback re-includes 701.
+    await fresh.pollOnce(
+      new FakeRpcServer([{ latestLedger: 750, cursor: "mid-ledger-cursor", events: fullPageEvents }]),
+    )
+    expect(fresh.getLastIndexed()).toBe(700)
+
+    // Poll 2: the stored cursor is now rejected by the RPC node (expired).
+    class ExpiredCursorServer extends FakeRpcServer {
+      getEvents(request: unknown) {
+        this.requests.push(request)
+        return Promise.reject(new Error("start is before oldest ledger available for this cursor"))
+      }
+    }
+    const expiring = new ExpiredCursorServer([])
+    await fresh.pollOnce(expiring)
+    expect(expiring.requests[0]).toMatchObject({ cursor: "mid-ledger-cursor" })
+    // lastIndexed must be unchanged after the failed poll.
+    expect(fresh.getLastIndexed()).toBe(700)
+
+    // Poll 3: cursor is gone, fallback kicks in. Must resume from ledger 701
+    // (lastIndexed + 1 = 700 + 1), not 702, so no events are permanently skipped.
+    const recovery = new FakeRpcServer([{ latestLedger: 751, events: [] }])
+    await fresh.pollOnce(recovery)
+    expect(recovery.requests[0]).toMatchObject({ startLedger: 701 })
   })
 })

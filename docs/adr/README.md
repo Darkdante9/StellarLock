@@ -15,6 +15,8 @@ An ADR documents a significant architectural choice made during development.
 | [ADR-008](./ADR-008-mock-data-testnet.md) | Mock data strategy for testnet | Accepted |
 | [ADR-009](./ADR-009-lp-vesting.md) | LP Locker supports optional linear vesting | Accepted |
 | [ADR-010](./ADR-010-rate-limit-via-temporary-storage.md) | Per-creator rate limiting via temporary storage | Accepted |
+| [ADR-009](./ADR-009-lp-vesting.md) | LP locker supports optional linear vesting | Accepted |
+| [ADR-010](./ADR-010-split-lock-allocation.md) | Split-lock allocation model (BPS shares, dust assignment, group_id reuse) | Accepted |
 
 ## Template
 Use [ADR-TEMPLATE.md](./ADR-TEMPLATE.md) for new decisions.
