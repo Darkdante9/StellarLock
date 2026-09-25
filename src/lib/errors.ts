@@ -95,26 +95,19 @@ const CONTRACT_ERRORS: Record<string, Omit<StructuredError, "code">> = {
     link: null,
     i18nKey: "errors.rateLimitExceeded",
   },
-  UnlockTooSoon: {
-    title: "errors.unlockTooSoon.title",
-    message: "errors.unlockTooSoon.message",
-    recovery: "errors.unlockTooSoon.recovery",
+  LockDurationTooShort: {
+    title: "errors.lockDurationTooShort.title",
+    message: "errors.lockDurationTooShort.message",
+    recovery: "errors.lockDurationTooShort.recovery",
     link: null,
-    i18nKey: "errors.unlockTooSoon",
+    i18nKey: "errors.lockDurationTooShort",
   },
-  ExtensionLimitReached: {
-    title: "errors.extensionLimitReached.title",
-    message: "errors.extensionLimitReached.message",
-    recovery: "errors.extensionLimitReached.recovery",
+  ExtensionLimitExceeded: {
+    title: "errors.extensionLimitExceeded.title",
+    message: "errors.extensionLimitExceeded.message",
+    recovery: "errors.extensionLimitExceeded.recovery",
     link: null,
-    i18nKey: "errors.extensionLimitReached",
-  },
-  UnlockExceedsMax: {
-    title: "errors.unlockExceedsMax.title",
-    message: "errors.unlockExceedsMax.message",
-    recovery: "errors.unlockExceedsMax.recovery",
-    link: null,
-    i18nKey: "errors.unlockExceedsMax",
+    i18nKey: "errors.extensionLimitExceeded",
   },
   // --- Previously missing contract error variants, now mapped ---
   AmountOverflow: {
