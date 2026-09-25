@@ -424,6 +424,16 @@
       "recovery": "Elige una fecha más cercana dentro del rango permitido.",
       "title": "Extensión demasiado larga"
     },
+    "lockDurationTooShort": {
+      "message": "La fecha de desbloqueo está demasiado cerca de la hora actual. Se requiere una duración mínima de bloqueo.",
+      "recovery": "Elige una fecha de desbloqueo al menos 24 horas en el futuro.",
+      "title": "Duración del bloqueo demasiado corta"
+    },
+    "extensionLimitExceeded": {
+      "message": "Este bloqueo ya ha alcanzado el límite máximo de extensiones permitidas.",
+      "recovery": "No se pueden realizar más extensiones para este bloqueo.",
+      "title": "Límite de extensiones superado"
+    },
     "unlockTooSoon": {
       "message": "La nueva fecha de desbloqueo debe ser suficientemente posterior a la actual para contar como una extensión.",
       "recovery": "Elige una fecha más lejana en el futuro.",

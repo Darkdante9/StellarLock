@@ -363,6 +363,16 @@
       "message": "You've exceeded the rate limit for creating locks. Please wait before creating another lock.",
       "recovery": "Wait a moment and try again."
     },
+    "lockDurationTooShort": {
+      "title": "Lock Duration Too Short",
+      "message": "The unlock date is too close to the current time. A minimum lock duration is required.",
+      "recovery": "Choose an unlock date at least 24 hours in the future."
+    },
+    "extensionLimitExceeded": {
+      "title": "Extension Limit Exceeded",
+      "message": "This lock has already been extended the maximum number of times allowed.",
+      "recovery": "No further extensions are possible for this lock."
+    },
     "unlockTooSoon": {
       "title": "Extension Too Short",
       "message": "The new unlock date must be far enough past the current one to count as an extension.",

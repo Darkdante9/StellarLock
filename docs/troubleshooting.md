@@ -19,9 +19,8 @@ Every entry maps directly to an error case defined in `src/lib/errors.ts`.
   - [AlreadyWithdrawn](#alreadywithdrawn)
   - [CanOnlyExtend](#cononlyextend)
   - [LockDurationTooLong](#lockdurationtoolong)
-  - [UnlockTooSoon](#unlocktooson)
-  - [ExtensionLimitReached](#extensionlimitreached)
-  - [UnlockExceedsMax](#unlockexceedsmax)
+  - [LockDurationTooShort](#lockdurationtooshort)
+  - [ExtensionLimitExceeded](#extensionlimitexceeded)
   - [NothingToRelease](#nothingtorerelease)
   - [VestingEndBeforeStart](#vestingendbeforestart)
   - [TooFewBeneficiaries](#toofewbeneficiaries)
@@ -140,13 +139,13 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ### LockDurationTooLong
 
-**Cause:** The requested lock duration exceeds the contract's maximum allowed duration (typically 10 years).
+**Cause:** The requested lock duration exceeds the contract's maximum allowed duration (typically 10 years). This error is used for both create-time and extend-time duration checks.
 
 **Fix:** Choose an unlock date closer to the present. If you genuinely need a very long lock, consider creating multiple sequential locks.
 
 ---
 
-### UnlockTooSoon
+### LockDurationTooShort
 
 **Cause:** The unlock date is too close to the current time — the contract enforces a minimum lock duration (e.g. at least 1 day).
 
@@ -154,7 +153,7 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ---
 
-### ExtensionLimitReached
+### ExtensionLimitExceeded
 
 **Cause:** The lock has already been extended the maximum number of times the contract permits.
 
@@ -162,13 +161,6 @@ If timeouts are frequent, the RPC node may be having issues. Check the health in
 
 ---
 
-### UnlockExceedsMax
-
-**Cause:** The new unlock date you chose when extending is beyond the contract's absolute maximum allowed unlock timestamp.
-
-**Fix:** Choose an earlier date. The contract's maximum is enforced globally regardless of the original lock duration.
-
----
 
 ### NothingToRelease
 
