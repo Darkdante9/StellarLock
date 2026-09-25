@@ -10,15 +10,17 @@ Backend service for monitoring lock timestamps and dispatching unlock notificati
 
 Runs on a cron schedule (every hour). For each registered notification subscription:
 
-1. Read the lock's `unlock_at` timestamp via `get_lock(id)` simulation
+1. Read the lock's `unlock_at`, `token`, `amount`, and `beneficiary` directly from the local `locks` SQLite table (written by `indexer/index.ts`'s event poller)
 2. Compare against current time to determine if a reminder threshold was crossed
 3. Dispatch notifications for thresholds: 7 days, 1 day, and at unlock
 
+> **Note:** The worker relies on the indexer's event-replay pipeline being up to date to have accurate lock state.
+
 ```
-┌──────────────┐     ┌───────────────┐     ┌──────────────────┐
-│  Cron Worker  │────▶│  Soroban RPC   │────▶│  Lock Contract   │
-│  (every 1h)  │     │  (simulate)   │     │  get_lock(id)    │
-└──────┬───────┘     └───────────────┘     └──────────────────┘
+┌──────────────┐     ┌──────────────────────┐
+│  Cron Worker  │────▶│ SQLite `locks` Table │◀──── (indexer/index.ts event poller)
+│  (every 1h)  │     │ (read unlock_at etc.)│
+└──────┬───────┘     └──────────────────────┘
        │
        ├──▶ Email (Resend)
        └──▶ Webhook (POST to user URL)
