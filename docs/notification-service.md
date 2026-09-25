@@ -31,7 +31,7 @@ REST endpoints for the frontend to register/unregister notification preferences.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/notifications/subscribe` | Register for lock notifications |
-| DELETE | `/api/notifications/subscribe/:lockId` | Unsubscribe from a lock |
+| DELETE | `/api/notifications/unsubscribe?lockId=...&address=...` | Unsubscribe from a lock |
 | GET | `/api/notifications/subscriptions` | List user's subscriptions |
 
 #### Subscribe payload
@@ -46,6 +46,15 @@ REST endpoints for the frontend to register/unregister notification preferences.
 ```
 
 At least one of `email` or `webhookUrl` must be provided.
+
+#### Unsubscribe parameters
+
+Query parameters:
+- `lockId`: the lock id (e.g. `token:1042` or bare `1042`)
+- `address`: subscriber's Stellar `G...` address
+
+Example: `DELETE /api/notifications/unsubscribe?lockId=token:1042&address=G...`
+
 
 ### 3. Database Schema
 
