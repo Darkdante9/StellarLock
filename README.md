@@ -313,3 +313,8 @@ Found a security vulnerability? Please read our [Security Policy](SECURITY.md) b
 ## License
 
 MIT
+
+## Handsoff notes
+
+<!-- handsoff-issue-785 -->
+- #785: NotificationSettings validates the email address but saves the webhook URL with no format check
